@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1047</width>
+    <width>809</width>
     <height>645</height>
    </rect>
   </property>
@@ -19,7 +19,7 @@
      <widget class="QGroupBox" name="groupBox_2">
       <property name="minimumSize">
        <size>
-        <width>500</width>
+        <width>300</width>
         <height>0</height>
        </size>
       </property>
@@ -115,7 +115,7 @@
        <property name="geometry">
         <rect>
          <x>140</x>
-         <y>200</y>
+         <y>180</y>
          <width>51</width>
          <height>31</height>
         </rect>
@@ -143,7 +143,7 @@
         </sizepolicy>
        </property>
        <property name="text">
-        <string>刷新设备号</string>
+        <string>测试</string>
        </property>
       </widget>
       <widget class="QRadioButton" name="rdbCurDay">
@@ -208,36 +208,39 @@
         </rect>
        </property>
       </widget>
-      <widget class="QPushButton" name="pushButton">
+      <widget class="QPushButton" name="pbtnReflash">
        <property name="geometry">
         <rect>
-         <x>130</x>
-         <y>310</y>
-         <width>93</width>
-         <height>28</height>
+         <x>160</x>
+         <y>340</y>
+         <width>75</width>
+         <height>23</height>
         </rect>
        </property>
        <property name="text">
-        <string>PushButton</string>
+        <string>设备刷新</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_3">
+       <property name="geometry">
+        <rect>
+         <x>160</x>
+         <y>380</y>
+         <width>72</width>
+         <height>15</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>传感器</string>
        </property>
       </widget>
       <widget class="QListWidget" name="lsDeviceType">
        <property name="geometry">
         <rect>
          <x>160</x>
-         <y>390</y>
+         <y>400</y>
          <width>121</width>
          <height>131</height>
-        </rect>
-       </property>
-      </widget>
-      <widget class="QListWidget" name="lsDepartment">
-       <property name="geometry">
-        <rect>
-         <x>20</x>
-         <y>390</y>
-         <width>111</width>
-         <height>127</height>
         </rect>
        </property>
       </widget>
@@ -245,7 +248,7 @@
        <property name="geometry">
         <rect>
          <x>20</x>
-         <y>370</y>
+         <y>380</y>
          <width>72</width>
          <height>15</height>
         </rect>
@@ -254,17 +257,14 @@
         <string>供电段</string>
        </property>
       </widget>
-      <widget class="QLabel" name="label_3">
+      <widget class="QListWidget" name="lsDepartment">
        <property name="geometry">
         <rect>
-         <x>160</x>
-         <y>370</y>
-         <width>72</width>
-         <height>15</height>
+         <x>20</x>
+         <y>400</y>
+         <width>111</width>
+         <height>127</height>
         </rect>
-       </property>
-       <property name="text">
-        <string>传感器</string>
        </property>
       </widget>
      </widget>
@@ -324,7 +324,7 @@ border-color: rgb(255, 255, 255);</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1047</width>
+     <width>809</width>
      <height>26</height>
     </rect>
    </property>

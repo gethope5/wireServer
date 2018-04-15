@@ -1,101 +1,73 @@
 ﻿#ifndef _DATA_BASE_H_
 #define _DATA_BASE_H_
-
-#include <QString>
-#include <QStringList>
-
-#include <QMessageBox>
-#include <QSqlDatabase>
-#include <QSqlError>
-#include <QSqlQuery>
-#include <qtableview.h>
-#include <QSqlTableModel>
-#include <qcolor.h>
-#include <QPair>
-#define LOCALDEBUG 0
-
+#include <QtSql>
+#include <QtGui>
 #include "headDatabase.h"
-#define MYSQL 1
-#define TABLE_NAME4 "deviceaddress"
-#define DB_NAME "testDb.db"
-struct fieldInfo
-{
-    QString fieldName;
-    QString fieldTitle;
-    bool bVisible;
-    QString dataType;
-    QString value;
-};
-struct tableInfo
-{
-    QString name;
-    QTableView *view;
-    QVector<fieldInfo> fields;
-    tableInfo()
-    {
-        view=NULL;
-    }
-};
-class tbDisplayModel : public QSqlTableModel
+#if XLS
+#include "subexcelsave.h"
+#endif
+#include <qtableview.h>
+#include <qfiledialog.h>
+#include <qtextcodec.h>
+#define showALL 0
+#define MYSQL_deviceTable_name "deviceinfo"
+class subSqlModel;
+class MeasureDB:public QObject
 {
     Q_OBJECT
-
 public:
-
-    tbDisplayModel (QString tableName,QTableView *table=0, QObject * parent = 0, QSqlDatabase db = QSqlDatabase() ) ;
-    ~tbDisplayModel();
-
-	tableInfo table;
-    void Commit(void);
-	void isOpenDB(void);
-	void isCloseDB(void);
-	void Transaction(void);
-	void initialCreate(bool f=true);
-    void initialDb( const QString& dbName);
-	void showtable(QString strName,QString filter="");
-    QStringList tables(void);
-    QSqlDatabase currDatabase(void);
-    virtual bool setData(const QModelIndex & index, const QVariant & value, int role = Qt::EditRole );
-	long getRecordCount(void);
-	  bool insertRecord(tableInfo table,int startIndex=0);
+    MeasureDB(QTableView *m_tableView,QSqlDatabase &db);
+    MeasureDB(QVector<QTableView *> tableView);
     bool insertIPPackageRecord(IPOrignal &dval);
-    bool createTable(tableInfo &);
-    void connectDB(void);
-
+    ~MeasureDB();
+    bool createTable(tableInfo);
+    bool addConnection(void);
     void addConnection(QString dbName);
-	
-			 
-    QByteArray parseOnePackage(int index,IPOrignal &oneRecord );
+    QSqlDatabase m_db;
+    void showDataTable(tableInfo &tableName,QString filter=QDateTime::currentDateTime().toString("yyyy-MM-dd"));
+    bool modifyRecord(int id, const QString& station,const QString& pid,const int structFlg);
+    bool insertRecordWireData(wireOrignalData & dval);
+    void Transaction(void);
+    void Commit(void);
+    QSqlDatabase currDatabase(void);
+    QString curDataName;
+    void exportCSVFile(QString);
+    void isOpenDB(void);
+    void isCloseDB(void);
+    wireOrignalData parseWirePackage(wireCmdPackage);
+    QByteArray parseOnePackage(int index,IPOrignal &oneRecord);
 
     bool ParaseSingleCmd(const QByteArray &singleCmd,qint16 &deviceNo);
     bool ParaseCmd(QByteArray packages, qint16 &deviceNo);
     void UpdataStatursDB(CCommand command);
     void parseAll(void);
-   
+    void tran(void);
+    void commit(void);
+    static QString tbPackagesName;
+    static QString tbDetectDataName;
 
-
-    
+    static tableInfo table1;
+    static tableInfo table3;
+    static tableInfo table4;
     QStringList getALLDeviceNo(void);
-	QString getCurIndex(void);
+
+    void showTables(void);
+    QString getCurIndex(void);
     bool insertDeviceStatus(void);
-    void showTables(void);	
-    static QStringList detailinfo0514_Devcies;
-    QString getTableName(QString id);
+    QString getTableName(QString devieNo);
+    void udapteTableName(void);
+    static QPair<QStringList,QStringList> deviceTables;//deviceId,tableName
     QStringList getDeviceType(QString department);
     QStringList getDeparment(void);
-
 private:
-    bool InsertDB(const CCommand cmd,QString tm);
-
+    bool insertWireDb(const CCommand cmd,QString tm);
+    bool insertBDb(const CCommand cmd);
     bool displayType;//true,一个tableview显示多个table；false，一个table对应一个tableview
     QString dataTm;
     int curIndex;
-    QSqlDatabase m_db;
-    QString parseTmp(QString &tmp);
-    
+    B_Data curBValue;
 signals:
-    //    void updateInfo(QString);
-    void db_status(bool);
+    void updateInfo(QString);
 };
 
 #endif

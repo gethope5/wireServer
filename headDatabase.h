@@ -13,30 +13,25 @@ enum eCONNECTSTATUS
     SERVER_CONNECTED,
     SERVER_DISCONNECT,
 };
+typedef struct
+{
+    int id;                 //1     id
+    QString time;           //2     时间
+    QString deviceType;     //4     设备类型
+    QString serialNumber;   //5     设备编号
+    QString sensorNumber;       //6     传感器编号
+    QString voltage;        //7     设备电压
+    QString eleCurrent;     //8     设备电流
+    QString temperature;    //9     设备温度
+    QString humidity;       //10     设备湿度
+}wireOrignalData;
+//                       "ID1,                                  时间1,            设备类型1,              设备编号1,                  传感器编号1,             设备电压1,           设备电流1,               设备温度1,               设备湿度1"
+#define CREATE_SQL1      "id INTEGER PRIMARY KEY AUTOINCREMENT, time varchar(30),deviceType varchar(10),serialNumber varchar(20),sersorNumber varchar(20),voltage varchar(20),eleCurrent varchar(20),temperature varchar(10),humidity varchar(10)"
+#define TABLE_TITLE1     "ID1,时间1,设备类型1,设备编号1,传感器编号1,电压1,电流1,温度1,湿度1"
+#define TABLE_NAME1 "wireOrignal"
 
 
 typedef struct
-{
-    int nId;                //1序号
-    QString sDeviceName;    //2设备名称
-    QString sSN;            //3设备序号
-    QString sDepartment;    //4所属路局
-    QString sPosition;      //5安装位置
-    QString installTime;    //6安装时间
-    QString addTime;        //7添加时间
-    QString wire1Name;      //8线路1名称
-    QString wire2Name;      //9线路2名称
-    QString wire3Name;      //10线路3名称
-    QString wire4Name;      //11线路4名称
-    QString wire5Name;      //12线路5名称
-    QString wire6Name;      //13线路6名称
-}deviceInfo;
-
-#define CREATE_SQL2      "id INTEGER PRIMARY KEY AUTOINCREMENT,deviceName varchar(30),SN varchar(30),department varchar(30),position varchar(30),installTm varchar(30),addTm varchar(30),w1Name varchar(30),w2Name varchar(30),w3Name varchar(30),w4Name varchar(30),w5 varchar(30),w6Name varchar(30)"
-#define TABLE_TITLE2     "ID1,设备名称1,设备序号1,所属路局1,安装位置1,安装时间1,添加时间1,线路11,线路21,线路31,线路41,线路51,线路61"
-#define TABLE_NAME2 "wireDeviceInfo"
-
-struct IPOrignal
 {
     int id;                 //1     id
     QString time;           //2     连接时间
@@ -46,24 +41,26 @@ struct IPOrignal
     QString ipPort;         //7     设备ip端口
     bool    bValid;         //8     当前有效状态
     QString packages;       //9     数据包
-    IPOrignal()
-    {}
+}IPOrignal;
+#define CREATE_SQL4      "id INTEGER PRIMARY KEY AUTOINCREMENT, time varchar(30),deviceType varchar(10),serialNumber varchar(20),ipAddress varchar(20),ipPort varchar(20),bValid bool"
+#define TABLE_TITLE4     QString::fromWCharArray(L"ID1,时间1,设备ip地址1,设备ip端口1,当前状态0,数据包1")
+#define TABLE_NAME4 "deviceaddress"
+
+struct tableInfo
+{
+    QString createSQL;      //1表格创建SQL语句
+    QString titleName;      //2表格字段中文名
+    QString tableName;      //3表格名称
+    QTableView *tableView;
+    subSqlModel *model ;
+//    tableInfo()
+//    {
+//        tableView=NULL;
+//        model=NULL;
+//    }
 };
 
-
-
-
-typedef struct
-{
-    int id;                 //1 ID
-    QString originalData;   //2 原始数据
-}wireOriginal;
-typedef struct
-{
-    QString poleindex;
-    QString station;
-}tableStruct_t;
-
+//电屏铠数据解析包
 struct wireCmdPackage
 {
     qint8 start;
@@ -98,10 +95,37 @@ struct CCommand
     QDateTime tm;//时间
     qint8 lineNo;//线路编号
 };
+struct B_Data
+{
+  float b1;             //1
+  float b2;
+  float temperature;
+  float temperatureIn;
+  float voltage;        //0x43
+  float voltage2;
+  float humidity;       //0x40
+  float humidityIn;
+  char package;
+  B_Data()
+  {
+      b1=0;             //1
+      b2=0;
+      temperature=0;
+      temperatureIn=0;
+      voltage=0;        //0x43
+      voltage2=0;
+      humidity=0;       //0x40
+      humidityIn=0;
+      package=0;
+  }
+};
 #define DB_PATHS  "./cc1.db"
 //添加设备
 #define ADD_DEVICE_UTF8 "\346\267\273\345\212\240\350\256\276\345\244\207"
 //当前连接数
 #define CUR_CONNECTS_UTF8 "\345\275\223\345\211\215\350\277\236\346\216\245\346\225\260:"
 #define Wire_Type 0x06
+#define B_Type 0x0e
+
+//#define "bdetectkm"
 #endif // HEADDATABASE_H

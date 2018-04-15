@@ -4,114 +4,65 @@
 
 #include <QtSql>
 #include "database.h"
-QStringList tbDisplayModel::detailinfo0514_Devcies;
-#if MYSQL
-//QSqlDatabase tbDisplayModel::m_db=QSqlDatabase::addDatabase("QMYSQL");
-//("0600040002", "0600040006", "0600040003", "0600040004",
-// "0600040005", "0600050003", "0600050002", "0600050001",
-// "0600050004", "0600020004", "0600020003", "0600020002",
-// "0600020001", "0600020005", "0600030001", "0600030002",
-// "0600030003", "0600030004", "0600030005", "0600030006",
-// "0600030007", "0600030008", "0600030009", "060003000a",
-// "0600030010", "0600020010", "0600020008", "0600020007",
-// "0600020009", "0600020006")
-#else
-QSqlDatabase tbDisplayModel::m_db=QSqlDatabase::addDatabase("QSQLITE","connectName");
-#endif
-tbDisplayModel::tbDisplayModel(QString tableName,QTableView *view,QObject * parent , QSqlDatabase db ) : QSqlTableModel(parent, db)
-{    
-   
-    table.view=view;
-    table.name=TABLE_NAME4;
-    initialCreate(false);
-    initialDb(DB_NAME);
-    qDebug()<<"set  host name,database status"<<m_db.isValid()<<m_db.databaseName()<<getRecordCount();
-    
-
-    if(!m_db.tables().contains(tableName))
-    {
-        createTable(table);
-    }
-//    showtable(TABLE_NAME4);
-    // cur custom code
+tableInfo MeasureDB::table4={CREATE_SQL4,TABLE_TITLE4,TABLE_NAME4,NULL,NULL};
+QPair<QStringList,QStringList> MeasureDB::deviceTables=QPair<QStringList,QStringList>(QStringList(""),QStringList(""));
+MeasureDB::MeasureDB(QTableView *m_tableView,QSqlDatabase &db)/*:model(NULL)*/
+{
+    //#if 1
+    //    addConnection(DB_PATHS);
+    //    createTable(table1);
+    //    createTable(table2);
+    //    displayType=true;
+    //#else
+    //    addConnection();
+    //#endif
     dataTm.clear();
     curIndex=0;
-}
-
-void tbDisplayModel::initialCreate(bool f)
-{
-    //#define CREATE_SQL4      "deviceType varchar(10),serialNumber varchar(20),ipAddress varchar(20),ipPort varchar(20),bValid bool"
-    //#define TABLE_TITLE4   romWCharArray(L"ID1,时间1,设备ip地址1,设备ip端口1,当前状态0,数据包1")
-    //#define TABLE_NAME4 "deviceaddress"
-    //1
-    fieldInfo tmpField={"id",QString::fromWCharArray(L"ID"),true,"int","123"};
-    table.fields<<tmpField;
-    //2
-    tmpField={"tm",QString::fromWCharArray(L"时间"),true,"varchar(30)","2018"};
-    table.fields<<tmpField;
-    //3
-    tmpField={"ip",QString::fromWCharArray(L"设备ip地址"),true,"varchar(10)","1.23"};
-    table.fields<<tmpField;
-    //4
-    tmpField={"port",QString::fromWCharArray(L"设备ip端口"),true,"varchar(20)","3.2"};
-    table.fields<<tmpField;
-    //5
-    tmpField={"bValid",QString::fromWCharArray(L"当前状态0"),true,"bool","1"};
-    table.fields<<tmpField;
-    //6
-    tmpField={"deviceInfo",QString::fromWCharArray(L"数据包1"),true,"varchar(200)","1"};
-    table.fields<<tmpField;
-    //
-    tmpField={"packages",QString::fromWCharArray(L"数据包1"),true,"varchar(200)","1"};
-    table.fields<<tmpField;
-}
-void tbDisplayModel::initialDb( const QString& dbName)
-{
-#if MYSQL
-
-
-    QSqlError err;
-#if LOCALDEBUG
-    m_db = QSqlDatabase::addDatabase("QMYSQL");
-    m_db.setHostName("127.0.0.1");
-    m_db.setPort(3307);
-    m_db.setDatabaseName("zbwdb");
-    m_db.setUserName("root");
-    m_db.setPassword("mytianjun-mysql");
-#else
-    m_db = QSqlDatabase::addDatabase("QMYSQL");
-    m_db.setHostName("120.25.233.115");
-    m_db.setPort(3306);
-    m_db.setDatabaseName("electricdata");
-    m_db.setUserName("root");
-    m_db.setPassword("mytianjun-mysql");
-#endif
-#else
-    QString connectName= QString("mdb_connection1");
-    m_db.setDatabaseName(dbName);
-#endif
-    if( m_db.open())
+    if(db.isValid())
     {
-        //QMessageBox::critical(this,"错误提示",m_db.lastError().text());
-        //return false;
-        //        ui->statusBar->showMessage(QString::fromWCharArray(L"数据库打开"));
-        //        dbConnect->setText(QString::fromWCharArray(L"数据库打开"));
-        qDebug()<<"database is connected,show all tables="<<m_db.tables();
-        emit db_status(true);
+        m_db=db;
+        table4.model=new subSqlModel(m_db);
+        table4.tableView=m_tableView;
+        //        table4.tableView->setModel(table4.model);
+        showDataTable(table4);
+    }
+    //model = new subSqlModel(m_db,tableView);
+}
+MeasureDB::MeasureDB(QVector<QTableView *> tableView)
+{
+    displayType=false;
+#if showALL
+    if(tableView.count()>2)
+    {
+        table1.tableView=tableView.at(0);
+        table2.tableView=tableView.at(1);
+        table3.tableView=tableView.at(2);
+
+        addConnection(DB_PATHS);
+        table1.model=new subSqlModel(m_db);
+        table2.model=new subSqlModel(m_db);
+        table3.model=new subSqlModel(m_db);
+        table4.model=new subSqlModel(m_db);
+
+        createTable(table1);
+        createTable(table2);
+        createTable(table3);
+        createTable(table4);
+
+        qDebug()<<"i get the tableviews";
+
+        showTables();
     }
     else
     {
-        qDebug()<<"can not open db..........";
-        err = m_db.lastError();
-        m_db = QSqlDatabase();
-        //        ui->statusBar->showMessage(QString::fromWCharArray(L"连接数据库失败")+m_db.lastError().text());
-        //        dbConnect->setText(QString::fromWCharArray(L"数据库失败")+m_db.lastError().text());
-        qDebug()<<"data is error";
-        emit db_status(false);
+        table1.tableView=NULL;
+        table2.tableView=NULL;
+        table3.tableView=NULL;
+        table4.tableView=NULL;
     }
-
+#endif
 }
-void tbDisplayModel::showTables(void)
+void MeasureDB::showTables(void)
 {
 #if showALL
     showDataTable(table1);
@@ -119,41 +70,36 @@ void tbDisplayModel::showTables(void)
     showDataTable(table3);
 #endif
 }
-void tbDisplayModel::connectDB(void)
+bool MeasureDB::addConnection(void)
 {
-
-#if LOCALDEBUG
+    bool beConnected ;
+    QSqlError err;
     m_db = QSqlDatabase::addDatabase("QMYSQL");
-    m_db.setHostName("127.0.0.1");
-    m_db.setPort(3307);
-    m_db.setDatabaseName("zbwdb");
-    m_db.setUserName("root");
-    m_db.setPassword("mytianjun-mysql");
-#else
-
-    m_db = QSqlDatabase::addDatabase("QMYSQL");
+    qDebug()<<"database valid="<<m_db.isValid();
     m_db.setHostName("120.25.233.115");
+    m_db.setDatabaseName("recievedata");
     m_db.setPort(3306);
-    m_db.setDatabaseName("electricdata");
     m_db.setUserName("root");
     m_db.setPassword("mytianjun-mysql");
-#endif
-    if( m_db.open())
+    if (!m_db.open())
     {
-        //QMessageBox::critical(this,"错误提示",m_db.lastError().text());
-        //return false;
-        //        ui->statusBar->showMessage(QString::fromWCharArray(L"数据库打开"));
-        //        dbConnect->setText(QString::fromWCharArray(L"数据库打开"));
-        qDebug()<<"database is connected,show all tables="<<m_db.tables();
+        err = m_db.lastError();
+        m_db = QSqlDatabase();
+    }
+    if (err.type() != QSqlError::NoError)
+    {
+        // QMessageBox::warning(NULL, tr("无法打开数据库"), tr("数据库操作错误: ") + err.text());
+        qDebug()<<"can not open the database! "<<err;
+        beConnected = false;
     }
     else
     {
-        //        ui->statusBar->showMessage(QString::fromWCharArray(L"连接数据库失败")+m_db.lastError().text());
-        //        dbConnect->setText(QString::fromWCharArray(L"数据库失败")+m_db.lastError().text());
-        qDebug()<<"data is error";
+        //        qDebug()<<"I can get the database\n";
+        beConnected =  true;
     }
+    return beConnected;
 }
-void tbDisplayModel::addConnection(QString dbName)
+void MeasureDB::addConnection(QString dbName)
 {
     QSqlError err;
     m_db = QSqlDatabase::addDatabase("QSQLITE", "mdb_connection");
@@ -168,135 +114,198 @@ void tbDisplayModel::addConnection(QString dbName)
     {
         qDebug()<<"db is ok";
     }
+    curDataName=DB_PATHS;
 }
-void tbDisplayModel::isOpenDB(void)
+void MeasureDB::isOpenDB(void)
 {
     if(!m_db.isOpen())
         qDebug()<<"again open status="<<m_db.open();
 }
-void tbDisplayModel::isCloseDB(void)
+void MeasureDB::isCloseDB(void)
 {
     Commit();
     m_db.close();
 }
-QString tbDisplayModel::parseTmp(QString &tmp)
-{
-    if(tmp.endsWith(","))
-    {
-        return tmp.left(tmp.count()-1);
-    }
-    else
-        return tmp;
-}
-bool tbDisplayModel::insertRecord(tableInfo table,int startIndex)
-{
-    QString fieldTmp,valueTmp;
-    if(table.fields.count()&&(startIndex<table.fields.count()))
-    {
-        for(int i=startIndex;i<table.fields.count();i++)
-        {
-            //            qDebug()<<"cur insert"<<i<<table.fields.at(i).value;
-            fieldTmp+=table.fields.at(i).fieldName+",";
-            if(table.fields.at(i).dataType.contains("char"))
-            {
-                valueTmp+="\'"+table.fields.at(i).value+"\',";
-            }
-            else
-            {
-                valueTmp+=table.fields.at(i).value+",";
-            }
-        }
-        fieldTmp=parseTmp(fieldTmp);
-        valueTmp=parseTmp(valueTmp);
-        QString strSql=QString("insert into %1 (%2) values (%3)").arg(table.name).arg(fieldTmp).arg(valueTmp);
-        QSqlQuery query(currDatabase());
-        bool flag=query.exec(strSql);
-//        qDebug()<<(strSql)<<flag;
-        return flag;
-    }
-    else
-    {
-        return false;
-    }
-}
-bool tbDisplayModel::createTable(tableInfo &table)
-{
-    if(currDatabase().tables().contains(table.name))
-    {
-        qDebug()<<QString("table %1 is exist").arg(table.name);
-        return true;
-    }
-    else
-    {
-        QSqlQuery query(currDatabase());
-        QString strCreateTmp;
-        for(int i=0;i<table.fields.count();i++)
-        {
-            strCreateTmp+=table.fields.at(i).fieldName+" "+table.fields.at(i).dataType+",";
-        }
-        strCreateTmp=parseTmp(strCreateTmp);
-        QString strSql=QString("create table %1(%2)").arg(table.name).arg(strCreateTmp);
-        qDebug()<<"create table,sql string "<<strSql;
-        return query.exec(strSql);
-    }
-}
-void tbDisplayModel::showtable(QString strName,QString filter)
-{
-    if(!currDatabase().isOpen())
-        currDatabase().open();
 
-#if 1
-    QSqlQuery query(currDatabase());
-    QString strSql;
-    if(filter.isNull())
+void MeasureDB::exportCSVFile(QString prePaths )
+{
+    qDebug()<<"prePaths="<<prePaths;
+    int indexBuffer=prePaths.lastIndexOf('/');
+
+    if(indexBuffer!=-1)
     {
-        strSql=QString("select * from %1").arg(table.name);
+        qDebug()<<"love you"<<prePaths.right(prePaths.count()-indexBuffer-1);
+        prePaths.chop(3);//removes 3 characters from the end of the string
+    }
+}
+void MeasureDB::showDataTable(tableInfo &tableName,QString filter)
+{
+    qDebug()<<"cur filter string"<<filter;
+#if 1
+    if(tableName.model)
+    {
+        //        bool dbOpen=tableName.model->database().isOpen();
+        tableName.tableView->setModel(tableName.model);
+        //        tableName.model->setTable(tableName.tableName);
+        if(!tableName.model->database().isOpen())
+        {
+            tableName.model->database().open();
+        }
+        tableName.model->setEditStrategy(QSqlTableModel::OnRowChange);
+        qDebug()<<"show table name="<<tableName.tableName;
+#if 1
+        tableName.model->setFilter(QString("id>0"));
+        tableName.model->setSort(0,Qt::AscendingOrder);
+
+        QSqlQuery query(tableName.model->database());
+        QString strSql=QString("select * from %1 where tm like \'%2%\'").arg(tableName.tableName).arg(filter);
+
+        if(query.exec(strSql))
+        {
+            qDebug()<<"string sql"<<strSql;
+            tableName.model->setquery(query);
+        }
+        else
+            qDebug()<<"not string sql"<<strSql;
+
+        tableName.model->select();
+        for(int i=0;i<tableName.titleName.split(',').count();i++)
+        {
+            QString tmp=tableName.titleName.split(',').at(i);
+            tableName.model->setHeaderData(i,Qt::Horizontal, QString(tmp.left(tmp.length()-1)));
+        }
+
+        while (tableName.model->canFetchMore())
+        {
+            tableName.model->fetchMore();
+        }
+        tableName.tableView->setModel(tableName.model);
+        tableName.tableView->setEditTriggers(QAbstractItemView::DoubleClicked|QAbstractItemView::EditKeyPressed);
+#if 1
+        //        tableName.tableView
+        tableName.tableView->setColumnWidth(0,60);
+        tableName.tableView->setColumnWidth(1,200);
+        tableName.tableView->setColumnWidth(2,160);
+        tableName.tableView->setColumnWidth(3,80);
+        tableName.tableView->setColumnWidth(4,40);
+#endif
+        tableName.tableView->selectRow(tableName.model->rowCount()-1);
+
+        for(int i=0;i<tableName.titleName.split(',').count();i++)
+        {
+            QString tmp=tableName.titleName.split(',').at(i);
+            if(!tmp.right(1).toInt())
+            {
+                //            qDebug()<<"display flag"<<i<<tmp.right(1).toInt();
+                tableName.tableView->setColumnHidden(i,true);
+            }
+        }
+#endif
     }
     else
     {
-        strSql=QString("select * from %1 where tm like \'%2%\'").arg(table.name).arg(filter);
-    }
-    //    qDebug()<<"string sql"<<strSql;
-    if(query.exec(strSql))
-    {
-        this->setQuery(query);
+        qDebug()<<"model is NULL";
     }
 #else
-    this->setTable(table.name);
-    qDebug()<<"cur table name="<<this->tableName();
-#endif
+    QString strFilter=QString("id>0");
+    QString fieldsSelect;
 
-    this->setEditStrategy(QSqlTableModel::OnRowChange);
-    this->setSort(0,Qt::AscendingOrder);
-    this->select();
-    for(int i=0;i<table.fields.count();i++)
+
+    //    tableName.model->setTable(tableName.tableName);
+    if(!tableName.model->database().isOpen())
     {
-        this->setHeaderData(i,Qt::Horizontal,table.fields.at(i).fieldTitle);
+        tableName.model->database().open();
     }
-    //    while (this->canFetchMore())
-    //    {
-    //        this->fetchMore();
-    //    }
-    //    qDebug()<<"cur index"<<curIndex<<dd.at(curIndex).first.name<<table.name<<dd.count();
-    table.view->setModel(this);
+    tableName.model->setEditStrategy(QSqlTableModel::OnRowChange);
+    //        int distIndex=getDistIndex(tableName);
+    //        if(distIndex)
+    //        {
+    //            model->setSort(distIndex,Qt::AscendingOrder);
+    //        }
 
-    table.view->selectRow(this->rowCount()-1);
+    QSqlQuery query(tableName.model->database());
+    QString strSql=QString("select * from %1 where tm like \'%2%\'").arg(tableName.tableName).arg(filter);
 
-    for(int i=0;i<table.fields.count();i++)
+    if(query.exec(strSql))
     {
-        if(!table.fields.at(i).bVisible)
+        qDebug()<<"string sql"<<strSql;
+        tableName.model->setquery(query);
+    }
+    else
+        qDebug()<<"not string sql"<<strSql;
+
+
+    tableName.model->select();
+    qDebug()<<"xls title"<<tableName.model->tableName()<<tableName.tableName<<
+              tableName.model->rowCount();//<<xlsTitleName<<ui->rdbDetailData->isChecked()<<ui->rdbSimpleData->isChecked()<<ui->rdbRangelData->isChecked();
+
+
+    while (tableName.model->canFetchMore())
+    {
+        tableName.model->fetchMore();
+    }
+    tableName.tableView->setModel(tableName.model);
+    tableName.tableView->setEditTriggers(QAbstractItemView::DoubleClicked|QAbstractItemView::EditKeyPressed);
+    //    tableName.tableView->setColumnWidth(model->record().indexOf("poleid"),40);
+    //    tableName.tableView->setColumnWidth(model->record().indexOf("id"),40);
+    //    tableName.tableView->setColumnWidth(model->record().indexOf("tm"),80);
+    //    tableName.tableView->setColumnWidth(model->record().indexOf("dist"),60);
+    //    tableName.tableView->setColumnWidth(model->record().indexOf("km"),80);
+    //    tableName.tableView->setColumnWidth(model->record().indexOf("station"),80);
+    //    tableName.tableView->setColumnWidth(-1,80);
+    //    tableName.tableView->selectRow(model->rowCount()-1);
+
+    for(int i=0;i<tableName.titleName.split(',').count();i++)
+    {
+        QString tmp=tableName.titleName.split(',').at(i);
+#if DEBUG_TITLE
+        if(tmp.right(1).toInt())
         {
-            table.view->setColumnHidden(i,true);//x倾角
+            model->setHeaderData(j++,Qt::Horizontal, QString(tmp.left(tmp.length()-1)));
         }
     }
+#else
+        //        if(tmp.right(1).toInt())
+        //        {
+        //            tableName.model->setHeaderData(i,Qt::Horizontal, QString(tmp.left(tmp.length()-1)));
+        //        }
+        //        else
+        //        {
+        //            //                        qDebug()<<"display flag"<<i<<tmp.right(1).toInt()<<tmp<<model->record().indexOf(fieldsSelect.split(',').at(i));
+        //            tableName.tableView->setColumnHidden(tableName.model->record().indexOf(fieldsSelect.split(',').at(i)),true);//x倾角
+        //        }
+    }
+#endif
+#endif
 }
-QByteArray tbDisplayModel::parseOnePackage(int index,IPOrignal &oneRecord)
+bool MeasureDB::createTable(tableInfo table)
+{
+    bool ok1;
+    isOpenDB();
+
+    QSqlQuery query(m_db);
+    //                                                  1ID,                                2 时间,         3 里程(米), 4公里标(千米),    5站区,            6杆号,         7轨距,           8超高,            9侧面界限,            10 红线                11 结构高度          12定拉            13定高,            14坡度,      15高差,      16中高,              17中拉,              18非支拉出值,      19非支导高1,       20 水平距离,          21垂直距离,      22 500高差,             23 定位器描述,               24 巡视图片";
+    QString strSql=QString("CREATE TABLE %1(%2)").arg(table.tableName).arg(table.createSQL);// ()";
+    ok1=query.exec(strSql);
+
+    if(ok1)
+    {
+        qDebug()<<QString("table %1 is ok.").arg(table.tableName);
+    }
+    else
+    {
+        qDebug()<<QString("table %1 is not ok.").arg(table.tableName);
+    }
+    //    isCloseDB();
+    return ok1;
+}
+QByteArray MeasureDB::parseOnePackage(int index,IPOrignal &oneRecord)
 {
     QByteArray tmp;
     isOpenDB();
     QSqlQuery query(m_db);
     //id,time,ip,port,bvalid,deviceinfo,packages
-    QString strval = QString("select tm,ip,port,packages from %1 where id=%2").arg(table.name).arg(index);
+    QString strval = QString("select tm,ip,port,packages from %1 where id=%2").arg(table4.tableName).arg(index);
 
     if(query.exec(strval))
     {
@@ -309,32 +318,39 @@ QByteArray tbDisplayModel::parseOnePackage(int index,IPOrignal &oneRecord)
             oneRecord.packages=QString(tmp);
         }
     }
+
     return tmp;
+}
+bool MeasureDB::modifyRecord(int id, const QString& station,
+                             const QString& pid,
+                             const int structFlg )
+{
+    isOpenDB();
+    QSqlQuery query(m_db);
+    QString strval = QString("UPDATE measures SET station='%1',"
+                             "poleID='%2',structFlag =%3 WHERE id>=%4")
+            .arg(station).arg(pid).arg(structFlg).arg(id);
+    bool modifiedrecord=query.exec(strval);
+    //    qDebug()<< "modify val "<<strval;
+    //      qDebug()<<"exec: "<<modifiedrecord;
+    //    qDebug()<<query.lastError();
+    //    isCloseDB();
+    return true;
 }
 
 
+//函数功能：向表格deviceAddress插入收到的原始数据。
 //#define CREATE_SQL4      "id INTEGER PRIMARY KEY AUTOINCREMENT, time varchar(30),deviceType varchar(10),serialNumber varchar(20),ipAddress varchar(20),ipPort varchar(20),bValid bool"
 //#define TABLE_TITLE4     "ID1,时间1,设备ip地址1,设备ip端口1,当前状态1,数据包1"
 //#define TABLE_NAME4 "connectedClients"
-bool tbDisplayModel::insertIPPackageRecord(IPOrignal &dval)
+bool MeasureDB::insertIPPackageRecord(IPOrignal &dval)
 {
     isOpenDB();
     //    qDebug()<<"db="<<m_db.isValid()<<m_db.tables();
     QSqlQuery query(m_db);
     bool flag;
-#if 0
-    QString strval = QString::fromWCharArray(L"INSERT INTO %1 VALUES(:id1, :id2, :id3, :id4, :id5, :id6, :id7)").arg(TABLE_NAME4);
-    query.prepare(strval);
-    qDebug()<<"ip record sql"<<strval;
-    query.bindValue(":id2",QDateTime::currentDateTime().toString("yyyy-MM-dd-hh-mm-ss"));
-    query.bindValue(":id3",dval.ipAddress);
-    query.bindValue(":id4",dval.ipPort);
-    query.bindValue(":id5", "dval.");
-    query.bindValue(":id6", "dval.bValid");
-    query.bindValue(":id7", dval.packages);
-    flag=query.exec();
-#else
-    QString sqlBuffer=QString("insert into %1 (tm,ip,port,bValid,deviceInfo,packages) values (\'%2\',\'%3\',\'%4\',%5,\'%6\',\'%7\')").arg(TABLE_NAME4)
+
+    QString sqlBuffer=QString("insert into %1 (tm,ip,port,bValid,deviceInfo,packages) values (\'%2\',\'%3\',\'%4\',%5,\'%6\',\'%7\')").arg(table4.tableName)
             .arg(QDateTime::currentDateTime().toString("yyyy-MM-dd-hh-mm-ss"))
             .arg(dval.ipAddress)
             .arg(dval.ipPort)
@@ -344,25 +360,103 @@ bool tbDisplayModel::insertIPPackageRecord(IPOrignal &dval)
 
     flag=query.exec(sqlBuffer);
     qDebug()<<"sql="<<sqlBuffer;
-#endif
+
     //    isCloseDB();
     return flag;
 }
-void tbDisplayModel::Transaction(void)
+wireOrignalData MeasureDB::parseWirePackage(wireCmdPackage cmd)
+{
+    //    int id;                 //1     id
+    //    QString time;           //2     时间
+    //    QString deviceType;     //4     设备类型
+    //    QString serialNumber;   //5     设备编号
+    //    int sensorNumber;       //6     传感器编号
+    //    QString voltage;        //7     设备电压
+    //    QString eleCurrent;     //8     设备电流
+    //    QString temperature;    //9     设备温度
+    //    QString humidity;       //10     设备湿度
+
+
+    //    qint8 length;   //数据长度
+    //    qint8 key;      //特征码
+    //    qint8 type;     //装置类型
+    //    qint16 no;      //设备序号
+    //    qint16 cv;      //温度或电压
+    //    qint16 hi;      //湿度或电流
+    //    qint8 cks;      //校验和
+    //    qint16 enter;//处理多余的回车换行
+    wireOrignalData dataRecord;
+    //1
+    dataRecord.time=QDateTime::currentDateTime().toString("yyyy-MM-dd-hh-mm-ss");
+    //2
+    if(cmd.type==0x06)
+        dataRecord.deviceType="电缆在线检测设备";
+    dataRecord.serialNumber=QString::number(cmd.no);
+    //3
+    if(cmd.key==0x60)
+    {
+        dataRecord.sensorNumber="总机";
+
+        dataRecord.temperature=QString::number(cmd.cv);
+        dataRecord.humidity=QString::number(cmd.hi);
+        dataRecord.voltage="";
+        dataRecord.eleCurrent="";
+    }
+    else
+    {
+        dataRecord.sensorNumber=QString("线路%1").arg(QString::number(cmd.key-0x60));
+
+        //dataRecord.sensorNumber=cmd.key-0x60;
+        dataRecord.voltage=QString::number(cmd.cv/1000.0,'g',6);
+        dataRecord.eleCurrent=QString::number(cmd.hi/1000.0,'g',6);
+        dataRecord.temperature="";
+        dataRecord.humidity="";
+    }
+    //    //4
+    //    dataRecord.voltage;
+    //    //5
+    //    dataRecord.eleCurrent;
+    //    //6
+    //    dataRecord.temperature;
+    //    //7
+    //    dataRecord.humidity;
+
+    return dataRecord;
+}
+bool MeasureDB::insertRecordWireData(wireOrignalData & dval)
+{
+    //    isOpenDB();
+    QSqlQuery query(m_db);
+    QString strval = QString("INSERT INTO %1 VALUES(:id1, :id2, :id3, :id4, :id5, :id6, :id7,:id8, :id9)").arg(TABLE_NAME1);
+    query.prepare(strval);
+
+    query.bindValue(":id2",dval.time);
+    query.bindValue(":id3",dval.deviceType);
+    query.bindValue(":id4",dval.serialNumber);
+    query.bindValue(":id5", dval.sensorNumber);
+    query.bindValue(":id6", dval.voltage);
+    query.bindValue(":id7", dval.eleCurrent);
+    query.bindValue(":id8", dval.temperature);
+    query.bindValue(":id9", dval.humidity);
+
+    bool flag=query.exec();
+    //    isCloseDB();
+    //    update();
+    return flag;
+}
+void MeasureDB::Transaction(void)
 {
     if(m_db.isOpen())
         m_db.transaction();
 }
-void tbDisplayModel::Commit(void)
+
+void MeasureDB::Commit(void)
 {
     if(m_db.isOpen())
         m_db.commit();
 }
-bool tbDisplayModel::setData ( const QModelIndex & index, const QVariant & value, int role)
-{
-    return QSqlTableModel::setData (index, value, role);
-}
-tbDisplayModel::~tbDisplayModel()
+
+MeasureDB::~MeasureDB()
 {
     if(m_db.isOpen())
         m_db.close();
@@ -372,29 +466,31 @@ tbDisplayModel::~tbDisplayModel()
         QSqlDatabase::removeDatabase(m_db.connectionName());
     }
 }
-QSqlDatabase tbDisplayModel::currDatabase(void)
+QSqlDatabase MeasureDB::currDatabase(void)
 {
     return m_db;
 }
-
-
-bool tbDisplayModel::ParaseCmd(QByteArray packages, qint16 &deviceNo)
+bool MeasureDB::ParaseCmd(QByteArray packages, qint16 &deviceNo)
 {
     int i=0;
     int  nEndIndex;
     int nFirstIndex;
     bool flag=false;
-    qDebug()<<"dd"<<packages;
+    char m[2];
+    m[0]=0x0d;
+    m[1]=0x0a;
+//    packages="fe0400020d400e0002065418875c0d0afe0400020d410e000200000000640d0afe0400020d420e0002067308765c0d0afe0400020d430e000230ac0000420d0a";
+//    qDebug()<<"dd"<<packages.toHex();
     do
     {
         nEndIndex=packages.indexOf("0d0a");
         nFirstIndex=packages.indexOf("fe");
-        qDebug()<<"index of"<<nEndIndex<<nFirstIndex;
+//        qDebug()<<"index of"<<nEndIndex<<nFirstIndex<<packages.indexOf(m);
         if((nFirstIndex!=-1)&&((nEndIndex-nFirstIndex)==28))
         {
             flag=ParaseSingleCmd(packages.mid(nFirstIndex,nEndIndex-nFirstIndex+4),deviceNo);
             i++;
-            qDebug()<<i<<flag;
+//            qDebug()<<i<<flag;
         }
         packages=packages.right(packages.count()-nEndIndex-4);
     }while((nEndIndex!=-1)&&(nFirstIndex!=-1));
@@ -404,7 +500,7 @@ bool tbDisplayModel::ParaseCmd(QByteArray packages, qint16 &deviceNo)
 }
 
 
-bool tbDisplayModel::ParaseSingleCmd(const QByteArray &singleCmd,qint16 &deviceNo)
+bool MeasureDB::ParaseSingleCmd(const QByteArray &singleCmd,qint16 &deviceNo)
 {
     CCommand cmd;
 
@@ -459,55 +555,102 @@ bool tbDisplayModel::ParaseSingleCmd(const QByteArray &singleCmd,qint16 &deviceN
             //                qDebug()<<QString::fromWCharArray(L"湿度")<<cmd.hi<<QString::fromWCharArray(L"温度")<<cmd.cv;
             //            }
             //                        qDebug()<<"insert status="<<cmd.lineNo<<
-            InsertDB(cmd,dataTm);//插入数据库
+            insertWireDb(cmd,dataTm);//插入数据库
 
             //更新设备状态
             UpdataStatursDB(cmd);
         }
         return true;
     }
+    else if(cmd.type==B_Type)\
+    {
+        insertBDb(cmd);
+    }
     else
     {
+        qDebug()<<"not right device type";
         return false;
     }
 }
-QStringList tbDisplayModel::tables(void)
+bool MeasureDB::insertBDb(const CCommand cmd)
 {
-    return m_db.tables();
+    //  float b1;             //1
+    //  float b2;
+    //  float temperature;
+    //  float temperatureIn;
+    //  float voltage;        //0x43
+    //  float voltage2;
+    //  float humidity;       //0x40
+    //  float humidityIn;
+    //  char package;
+//    qDebug()<<"before"<<QString::number(curBValue.package,'g',16)<<"dd";
+
+    //仪表内的湿度及温度
+    if(cmd.key==0x40)
+    {
+        curBValue.humidityIn=(float)cmd.cv/100.0;
+        curBValue.temperatureIn=(float)cmd.hi/100.0;
+        curBValue.package|=0x01;
+    }
+    //外部温度及湿度
+    else if(cmd.key==0x41)
+    {
+        curBValue.humidity=(float)cmd.cv/100.0;
+        curBValue.temperature=(float)cmd.hi/100.0;
+        curBValue.package|=0x02;
+    }
+    //b1及B2值
+    else if(cmd.key==0x42)
+    {
+        curBValue.b1=cmd.cv;
+        curBValue.b2=cmd.hi;
+        curBValue.package|=0x04;
+    }
+    //集中器及采集器电压
+    else if(cmd.key==0x43)
+    {
+        curBValue.voltage=(float)cmd.cv/1000.0;
+        curBValue.voltage2=(float)cmd.hi/1000.0;
+        curBValue.package|=0x08;
+    }
+//    qDebug()<<"b device ID"<<cmd.sRelayNo+cmd.sNo<<QString::number(curBValue.package,'g',16)<<"dd";
+
+    if((curBValue.package&0x0f)==0x0f)
+    {
+        curBValue.package=0;
+        QString curDeviceId=cmd.sRelayNo+cmd.sNo;
+        QString curTableName;
+        QSqlQuery sqlQuery(m_db);
+        bool bFlag=false;
+        int devIdIndex=deviceTables.first.indexOf(curDeviceId);
+        //        qDebug()<<"ok"<<deviceTables;
+        if(devIdIndex!=-1)
+        {
+            curTableName=deviceTables.second.at(devIdIndex);
+            emit updateInfo(curTableName);
+
+            QString strSql=QString("insert into %11 (tm,deviceNo,b1,b2,temperature,temperatureIn,voltage,voltage2,humidity,humidityIn,remark) "\
+                           "values (now(),\'%1\',%2,%3,%4,%5,%6,%7,%8,%9,\'%10\')")
+                    .arg(curDeviceId).arg(curBValue.b1).arg(curBValue.b2).arg(curBValue.temperature).arg(curBValue.temperatureIn)
+                    .arg(curBValue.voltage).arg(curBValue.voltage2).arg(curBValue.humidity).arg(curBValue.humidityIn).arg("")
+                    .arg(curTableName);
+            bFlag=sqlQuery.exec(strSql);
+            qDebug()<<"insert data"<<strSql<<bFlag;
+            return bFlag;
+        }
+    }
+
 }
-bool tbDisplayModel::InsertDB(const CCommand cmd,QString tm)
+//函数功能：将电屏铠数据插入对应的数据表格
+bool MeasureDB::insertWireDb(const CCommand cmd,QString tm)
 {
     QSqlQuery sqlQuery(m_db);
     static QString wendu=0;
     static QString shidu=0;
     if(cmd.lineNo)
     {
-#if 1
-        //0318先通过设备号查找对应的表格，在进行数据插入操作
         QString strSql;
-        QString deviceNo=cmd.sRelayNo+cmd.sNo;
-        QString tableName=getTableName(deviceNo);
-        if(tableName.isNull())
-        {
-            qDebug()<<QString::fromWCharArray(L"未找到设备类型");
-            return false;
-        }
-        if(tm.isNull())
-        {
-            strSql=QString("insert into %7 ( tm,deviceNO,lineNo,voltage,current,temperature,humidity) values (now(),\'%1\',%2,%3,%4,%5,%6)")
-                    .arg(deviceNo).arg(cmd.lineNo).arg(QString::number(cmd.cv/1000.000,'f',3)).arg(QString::number(cmd.hi/1000.000,'f',3)).arg(wendu).arg(shidu)
-                    .arg(tableName);
-        }
-        else
-        {
-            strSql=QString("insert into %8( tm,deviceNO,lineNo,voltage,current,temperature,humidity) values (\'%1\',\'%2\',%3,%4,%5,%6,%7)")
-                    .arg(dataTm).arg(deviceNo).arg(cmd.lineNo).arg(QString::number(cmd.cv/1000.000,'f',3)).arg(QString::number(cmd.hi/1000.000,'f',3)).arg(wendu).arg(shidu)
-                    .arg(tableName);
-        }
-        //        qDebug()<<"insert data"<<strSql;
-        return sqlQuery.exec(strSql);
-#else
-        QString strSql;
+#if 0
         if(tm.isNull())
         {
             strSql=QString("insert into %7 ( tm,deviceNO,lineNo,voltage,current,temperature,humidity) values (now(),\'%1\',%2,%3,%4,%5,%6)")
@@ -520,8 +663,33 @@ bool tbDisplayModel::InsertDB(const CCommand cmd,QString tm)
                     .arg(dataTm).arg(cmd.sRelayNo+cmd.sNo).arg(cmd.lineNo).arg(QString::number(cmd.cv/1000.000,'f',3)).arg(QString::number(cmd.hi/1000.000,'f',3)).arg(wendu).arg(shidu)
                     .arg("detailinfo0514");
         }
-        //        qDebug()<<"insert data"<<strSql;
-        return sqlQuery.exec(strSql);
+#else
+        QString curDeviceId=cmd.sRelayNo+cmd.sNo;
+        QString curTableName;
+        //        deviceId,tableName
+        int devIdIndex=deviceTables.first.indexOf(curDeviceId);
+qDebug()<<"curDevice iD"<<curDeviceId;
+        if(devIdIndex!=-1)
+        {
+            curTableName=deviceTables.second.at(devIdIndex);
+            emit updateInfo(curTableName);
+            if(tm.isNull())
+            {
+                strSql=QString("insert into %7 ( tm,deviceNO,lineNo,voltage,current,temperature,humidity) values (now(),\'%1\',%2,%3,%4,%5,%6)")
+                        .arg(curDeviceId).arg(cmd.lineNo).arg(QString::number(cmd.cv/1000.000,'f',3)).arg(QString::number(cmd.hi/1000.000,'f',3)).arg(wendu).arg(shidu)
+                        .arg(curTableName);
+            }
+            else
+            {
+                strSql=QString("insert into %8( tm,deviceNO,lineNo,voltage,current,temperature,humidity) values (\'%1\',\'%2\',%3,%4,%5,%6,%7)")
+                        .arg(dataTm).arg(curDeviceId).arg(cmd.lineNo).arg(QString::number(cmd.cv/1000.000,'f',3)).arg(QString::number(cmd.hi/1000.000,'f',3)).arg(wendu).arg(shidu)
+                        .arg(curTableName);
+            }
+            qDebug()<<"insert data"<<strSql;
+            return sqlQuery.exec(strSql);
+        }
+        else
+            qDebug()<<"not right device id and table name"<<curDeviceId;
 #endif
     }
     else
@@ -532,7 +700,16 @@ bool tbDisplayModel::InsertDB(const CCommand cmd,QString tm)
         return false;
     }
 }
-void tbDisplayModel::UpdataStatursDB(CCommand command)
+void MeasureDB::tran(void)
+{
+    m_db.transaction();
+}
+void MeasureDB::commit(void)
+{
+    m_db.commit();
+}
+
+void MeasureDB::UpdataStatursDB(CCommand command)
 {
     QSqlQuery queryStaturs;
     if(command.lineNo == 0)
@@ -586,11 +763,11 @@ void tbDisplayModel::UpdataStatursDB(CCommand command)
         qDebug()<<QString::fromWCharArray(L"更新数据库成功");
     }
 }
-void tbDisplayModel::parseAll(void)
+void MeasureDB::parseAll(void)
 {
     //    m_db.transaction();
     QSqlQuery query(m_db);
-    if(query.exec(QString("select *from %1").arg(table.name)))
+    if(query.exec(QString("select *from %1").arg(table4.tableName)))
     {
         while(query.next())
         {
@@ -608,16 +785,14 @@ void tbDisplayModel::parseAll(void)
     }
     //    m_db.commit();
 }
-QString tbDisplayModel::getCurIndex(void)
+QString MeasureDB::getCurIndex(void)
 {
     return QString::number(curIndex);
 }
-QStringList tbDisplayModel::getALLDeviceNo(void)
+QStringList MeasureDB::getALLDeviceNo(void)
 {
     QSqlQuery query(m_db);
-//    QString strSql=QString("Select distinct deviceNo  from %1").arg("detailinfo0514");
-    QString strSql=QString("Select  deviceId  from %1").arg("deviceInfo");
-
+    QString strSql=QString("Select distinct deviceNo  from %1").arg("detailinfo0514");
     QStringList cc;
     if(query.exec(strSql))
     {
@@ -628,8 +803,7 @@ QStringList tbDisplayModel::getALLDeviceNo(void)
     }
     return cc;
 }
-//函数功能：设备
-bool tbDisplayModel::insertDeviceStatus(void)
+bool MeasureDB::insertDeviceStatus(void)
 {
     "ID，deviceNo，department，position，installTm，addTm，line1，line2，line3，line4，line6，remainCell，temperature，humidity，recentTmUpdate";
     QSqlQuery query(m_db);
@@ -657,47 +831,13 @@ bool tbDisplayModel::insertDeviceStatus(void)
         }
     }
     return true;
-
-    //    QFile file("utf8.txt");
-    //    QByteArray utfstr;
-    //    if(file.open(QFile::ReadWrite))
-    //    {
-    //        utfstr=(file.readAll());
-    //        file.close();
-    //    }
-    //    if(!utfstr.isEmpty())
-    //    {
-    //        ////    QByteArray dd=QString(QString::fromWCharArray(L"成都").toUtf8());
-    //        QString strsql;//=QString::fromWCharArray(L"insert into deviecestaturs0514 (deviceNo) values(\'%1\')").arg(QString::fromWCharArray(,utfstr.to));//.arg("成都"/*QString::fromWCharArray(L"sfjs你").toUtf8()*/);
-
-    //        qDebug()<<"sql"<<strsql;
-    //        return query.exec(strsql);
-    //    }
-    //    return true;
 }
-//函数功能：对table对象的记录数进行统计
-long tbDisplayModel::getRecordCount(void)
-{
-    long tmp=0;
-    QSqlQuery query(m_db);
-    QString strSql=QString("select count(*) from %1").arg(table.name);
-    qDebug()<<"get record count sql="<<strSql;
-    if(query.exec(strSql))
-    {
-        while(query.next())
-        {
-            tmp=query.value(0).toLongLong();
-        }
-        qDebug()<<"recoud count="<<tmp;
-    }
-    return tmp;
-}
-//函数功能：根据设备id查询id的数据存储的表格
-QString tbDisplayModel::getTableName(QString id)
+QString MeasureDB::getTableName(QString deviceNo)
 {
     QSqlQuery query(m_db);
-    QString strSql=QString("select tableName from %1 where deviceId=\'%2\'").arg("deviceInfo").arg(id);
-//    qDebug()<<"found tablename ,sql="<<strSql;
+
+    QString strSql=QString("select tableName from %2 where deviceNO=\'%1\'").arg(deviceNo).arg(MYSQL_deviceTable_name);
+    qDebug()<<"get device table Name"<<strSql;
     if(query.exec(strSql))
     {
         while(query.next())
@@ -707,12 +847,34 @@ QString tbDisplayModel::getTableName(QString id)
     }
     return "";
 }
-//函数功能：根据供电段的名称查询该供电段所属的传感器类型
-QStringList tbDisplayModel::getDeviceType(QString department)
+void MeasureDB::udapteTableName(void)
 {
     QSqlQuery query(m_db);
-    QString strSql=QString("select distinct deviceType from %1 where department= \'%2\'").arg("deviceInfo").arg(department);
-//    qDebug()<<"found tablename ,sql="<<strSql;
+    QString strSql=QString("select deviceNO,tableName,department,deviceType from %1 ").arg(MYSQL_deviceTable_name);
+    qDebug()<<"update all device tables,sql="<<strSql;
+    int i=0;
+    if(query.exec(strSql))
+    {
+        deviceTables.first.clear();
+        deviceTables.second.clear();
+        while(query.next())
+        {
+            deviceTables.first<<query.value(0).toString();
+            deviceTables.second<<query.value(1).toString();
+            if(i<deviceTables.first.count())
+            {
+                qDebug()<<"device table"<<i<<deviceTables.first.at(i)<<deviceTables.second.at(i)<<query.value(2).toString()<<query.value(3).toString();
+                i++;
+            }
+        }
+    }
+}
+//函数功能：根据供电段的名称查询该供电段所属的传感器类型
+QStringList MeasureDB::getDeviceType(QString department)
+{
+    QSqlQuery query(m_db);
+    QString strSql=QString("select distinct deviceType from %1 where department= \'%2\'").arg(MYSQL_deviceTable_name).arg(department);
+    //    qDebug()<<"found tablename ,sql="<<strSql;
     if(query.exec(strSql))
     {
         QStringList deviceTypes;
@@ -724,10 +886,10 @@ QStringList tbDisplayModel::getDeviceType(QString department)
     }
     return QStringList("");
 }
-QStringList tbDisplayModel::getDeparment(void)
+QStringList MeasureDB::getDeparment(void)
 {
     QSqlQuery query(m_db);
-    QString strSql=QString("select DISTINCT department from %1 ").arg("deviceInfo");
+    QString strSql=QString("select DISTINCT department from %1 ").arg(MYSQL_deviceTable_name);
     //    qDebug()<<"found tablename ,sql="<<strSql;
     if(query.exec(strSql))
     {

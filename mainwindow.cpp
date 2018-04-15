@@ -16,30 +16,28 @@ MainWindow::MainWindow(QWidget *parent) :
     dbConnect->setFixedWidth(100);
     ui->statusBar->addPermanentWidget(dbConnect);
 
+    connectDB();
     //    ui->lineEdit_ip->setText("127.0.0.1");
+#if LOCALDEBUG
+#else
     ui->lineEdit_ip->setText("120.25.233.115");
+#endif
     ui->lineEdit_port->setText("9090");
     count = 0;
     //startTimer(5000);
-    sysDb=new tbDisplayModel(TABLE_NAME4,ui->tbIP) ;
+    sysDb=new MeasureDB(ui->tbIP,db) ;
+    //    connect(sysDb,SIGNAL(updateInfo(QString)),this,SLOT(slot_showMessage(QString)));
     timer=new QTimer(this);
     connect(timer,SIGNAL(timeout()),this,SLOT(slot_updateIndex()));
     ui->pbtnAnalysis->setEnabled(false);
-    ui->test_2->setEnabled(false);
     ui->test->setEnabled(false);
-    qDebug()<<"3";
     QSettings cc("config.ini",QSettings::IniFormat);
     //    qDebug()<<"dd value"<<QTextCodec::codecForName("gb2313")->toUnicode(cc.value("dd").toByteArray());
     connect(ui->rdbCurDay,SIGNAL(clicked(bool)),this,SLOT(slot_filter(bool)));
     connect(ui->rdbCurMonth,SIGNAL(clicked(bool)),this,SLOT(slot_filter(bool)));
     connect(ui->rdbOther,SIGNAL(clicked(bool)),this,SLOT(slot_filter(bool)));
-    connect(sysDb,SIGNAL(db_status(bool)),this,SLOT(slot_dbStatus(bool)));
     ui->rdbCurDay->setChecked(true);
     ui->lneDate->setEnabled(false);
-    lblStatus=new QLabel(ui->statusBar);
-    lblStatus->setFixedWidth(100);
-    lblStatus->setText(QString::fromWCharArray(L"服务器未连接"));
-    ui->statusBar->addPermanentWidget(lblStatus);
 #if 0
     ui->lneDate->setAutoFillBackground(true);
     ui->pbtnSetDate->setAutoFillBackground(true);
@@ -52,14 +50,15 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->lneDate->setText("dd");
     ui->pbtnSetDate->setPalette(dd);
 #else
-//    dd.setColor(Qt::red);
+    //    dd.setColor(Qt::red);
     ui->lneDate->setStyleSheet("color:red;");
-#endif
+
     //进行供电段及对应的传感器初始化
     QStringList departments=sysDb->getDeparment();
     ui->lsDepartment->addItems(departments);
     if(departments.count())
         updateDeiveType(departments.at(0));
+#endif
 }
 MainWindow::~MainWindow()
 {
@@ -68,21 +67,16 @@ MainWindow::~MainWindow()
 void MainWindow::timerEvent(QTimerEvent *)
 {
     this->on_test_clicked();
-    qDebug()<<"eror";
 }
 void MainWindow::on_pushButton_startS_clicked()
 {
     tcpServer = new QTcpServer(this);
     if(tcpServer->listen(QHostAddress(ui->lineEdit_ip->text()),ui->lineEdit_port->text().toInt()))
     {
-        lblStatus->setText(QString::fromWCharArray(L"开启服务器成功"));
+        ui->statusBar->showMessage(QString::fromWCharArray(L"开启服务器成功"));
         connect(tcpServer,SIGNAL(newConnection()),this,SLOT(AcceptConnection()));
     }
-    else
-    {
-        lblStatus->setText(QString::fromWCharArray(L"开启服务器失败"));
-    }
-    //    startTimer(5000);
+    startTimer(5000);
 }
 
 void MainWindow::AcceptConnection()
@@ -122,29 +116,15 @@ void MainWindow::ReadData()
     QByteArray data = client->readAll();
     ui->statusBar->showMessage(data.toHex());
 
-#if 0
-    QFile file("originalData.txt");
 
-
-    if(!file.open(QIODevice::ReadWrite|QIODevice::Text | QIODevice::Append))
-        ui->statusBar->showMessage(QString::fromWCharArray(L"打开文件失败"));
-    else
-    {
-        //保持原始数据
-        QTextStream outfile(&file);
-        outfile<<QDateTime::currentDateTime().toString("yyyy-MM-dd-hh-mm-ss")<<endl;
-        outfile<<data.toHex()<<endl;
-        file.close();
-    }
-#else
     IPOrignal dd;
     dd.ipAddress=client->peerAddress().toString();
     dd.ipPort=QString::number(client->peerPort());
     dd.packages=data.toHex();
     sysDb->insertIPPackageRecord(dd);
     //    qDebug()<<"insert status="<<
-    sysDb->showtable(TABLE_NAME4);
-#endif
+    sysDb->showDataTable(MeasureDB::table4);
+
     qint16 deviceNo;
     qDebug()<<"data"<<data<<data.count()<<data.toHex();
     sysDb->ParaseCmd(data.toHex(),deviceNo);
@@ -158,6 +138,39 @@ void MainWindow::ReadData()
         temp.No = deviceNo;
         temp.tcpSocket = client;
         deviceAddress.push_back(temp);
+    }
+}
+void MainWindow::connectDB()
+{
+
+#if LOCALDEBUG
+    db = QSqlDatabase::addDatabase("QMYSQL");
+    db.setHostName("127.0.0.1");
+    db.setPort(3307);
+    db.setDatabaseName("zbwdb");
+    db.setUserName("root");
+    db.setPassword("mytianjun-mysql");
+#else
+
+    db = QSqlDatabase::addDatabase("QMYSQL");
+    db.setHostName("120.25.233.115");
+    db.setPort(3306);
+    db.setDatabaseName("electricdata");
+    db.setUserName("root");
+    db.setPassword("mytianjun-mysql");
+#endif
+    if( db.open())
+    {
+        //QMessageBox::critical(this,"错误提示",db.lastError().text());
+        //return false;
+        //        ui->statusBar->showMessage(QString::fromWCharArray(L"数据库打开"));
+        dbConnect->setText(QString::fromWCharArray(L"数据库打开"));
+        qDebug()<<"show all tables="<<db.tables();
+    }
+    else
+    {
+        //        ui->statusBar->showMessage(QString::fromWCharArray(L"连接数据库失败")+db.lastError().text());
+        dbConnect->setText(QString::fromWCharArray(L"数据库失败")+db.lastError().text());
     }
 }
 void MainWindow::UpdataAddress(qint16 no,QString ip,qint16 port)
@@ -314,8 +327,8 @@ void MainWindow::on_pbtnUIExpand_clicked()
 void MainWindow::on_tbIP_clicked(const QModelIndex &index)
 {
     //    qDebug()<<"111"<<index.column()<<index.row();
-    IPOrignal dd;
-    QByteArray tmp=sysDb->parseOnePackage(index.row(),dd);
+    IPOrignal oneRecord;
+    QByteArray tmp=sysDb->parseOnePackage(index.row(),oneRecord);
     qint16 deviceNo;
     sysDb-> ParaseCmd(tmp,deviceNo);
     qDebug()<<"cur package value="<<deviceNo;
@@ -347,29 +360,7 @@ inline QString UTF82GBK(const QString &inStr)
     QString utf2gbk = gbk->toUnicode(inStr.toLocal8Bit());
     return utf2gbk;
 }
-void MainWindow::on_test_2_clicked()
-{
-    qDebug()<<"insert record"<<sysDb->insertDeviceStatus();
-    QSettings cc("config.ini",QSettings::IniFormat);
-    //    cc.value(dd).toBitArray();
 
-    qDebug()<<"dd value"<</*QString::fromUtf8*/(cc.value("dd","d").toString())<<cc.value("cc","d").toString();
-    //    cc.setValue("cc","擦擦擦");
-    //    QFile file("utf8.txt");
-    //    if(file.open(QFile::ReadWrite))
-    //    {
-    //      qDebug()<<"dlj"<<QString::fromUtf8(file.readAll());
-    //      QTextStream cc1(&file);
-    //      qDebug()<<"text value"<<ui->pushButton_startS->text();
-    //      wchar_t d[100];
-
-    //      ui->pushButton_startS->text().toWCharArray(d);
-    //      cc1<<GBK2UTF8(ui->pushButton_startS->text());
-    //      QString::toUtf8();
-    //      qDebug()<<"dlj"<<QString::fromUtf8(file.readAll());
-    //      file.close();
-    //}
-}
 
 void MainWindow::slot_filter(bool f)
 {
@@ -393,23 +384,29 @@ void MainWindow::slot_filter(bool f)
 void MainWindow::on_pbtnSetDate_clicked()
 {
     if(!curDate.isNull())
-        sysDb->showtable(TABLE_NAME4);
-//    (tbDisplayModel::table4,curDate);
+        sysDb->showDataTable(MeasureDB::table4,curDate);
 }
-void MainWindow::slot_dbStatus(bool flag)
+void MainWindow::slot_showMessage(QString str)
 {
-    if(flag)
-    {
-        dbConnect->setText(QString::fromWCharArray(L"MYSQL已打开"));
-    }
-    else
-    {
-        dbConnect->setText(QString::fromWCharArray(L"MYSQL未打开"));
-    }
+    this->statusBar()->showMessage(str);
+}
+//函数功能：根据当前供电段，更新所属的设备类型，如电屏铠、B值、张力等
+void MainWindow::on_lsDepartment_clicked(const QModelIndex &index)
+{
+    //    qDebug()<<"index"<<index.data().toString();
+    updateDeiveType(index.data().toString());
+}
+//函数功能：根据
+void MainWindow::updateDeiveType(QString local)
+{
+    ui->lsDeviceType->clear();
+    ui->lsDeviceType->addItems(sysDb->getDeviceType(local));
 }
 
-void MainWindow::on_pushButton_clicked()
+void MainWindow::on_pbtnReflash_clicked()
 {
+
+    sysDb->udapteTableName();
     QTime dd;
     dd.start();
     qDebug()<<"all device"<<sysDb->getTableName("0600040002");
@@ -421,14 +418,33 @@ void MainWindow::on_pushButton_clicked()
         qDebug()<<"department "<<dd1.at(i)<<sysDb->getDeviceType(dd1.at(i));
     }
 }
+//测试用
+void MainWindow::on_test_2_clicked()
+{
+#if 0
+    qDebug()<<"insert record"<<sysDb->insertDeviceStatus();
+    QSettings cc("config.ini",QSettings::IniFormat);
+    //    cc.value(dd).toBitArray();
 
-void MainWindow::on_lsDepartment_clicked(const QModelIndex &index)
-{
-//    qDebug()<<"index"<<index.data().toString();
-    updateDeiveType(index.data().toString());
-}
-void MainWindow::updateDeiveType(QString local)
-{
-    ui->lsDeviceType->clear();
-    ui->lsDeviceType->addItems(sysDb->getDeviceType(local));
+    qDebug()<<"dd value"<</*QString::fromUtf8*/(cc.value("dd","d").toString())<<cc.value("cc","d").toString();
+    //    cc.setValue("cc","擦擦擦");
+    //    QFile file("utf8.txt");
+    //    if(file.open(QFile::ReadWrite))
+    //    {
+    //      qDebug()<<"dlj"<<QString::fromUtf8(file.readAll());
+    //      QTextStream cc1(&file);
+    //      qDebug()<<"text value"<<ui->pushButton_startS->text();
+    //      wchar_t d[100];
+
+    //      ui->pushButton_startS->text().toWCharArray(d);
+    //      cc1<<GBK2UTF8(ui->pushButton_startS->text());
+    //      QString::toUtf8();
+    //      qDebug()<<"dlj"<<QString::fromUtf8(file.readAll());
+    //      file.close();
+    //}
+#endif
+    QByteArray mm=QByteArray::fromHex("fe0400020d400e0002065418875c0d0afe0400020d410e000200000000640d0afe0400020d420e0002067308765c0d0afe0400020d430e000230ac0000420d0a");
+    qint16 dd;
+    qDebug()<<"love "<<mm.toHex();
+    sysDb->ParaseCmd(mm,dd);
 }

@@ -53,11 +53,11 @@ public:
     QRadioButton *rdbOther;
     QPushButton *pbtnSetDate;
     QLineEdit *lneDate;
-    QPushButton *pushButton;
-    QListWidget *lsDeviceType;
-    QListWidget *lsDepartment;
-    QLabel *label_2;
+    QPushButton *pbtnReflash;
     QLabel *label_3;
+    QListWidget *lsDeviceType;
+    QLabel *label_2;
+    QListWidget *lsDepartment;
     expandPushButton *pbtnUIExpand;
     QGroupBox *groupBox;
     QGridLayout *gridLayout;
@@ -70,7 +70,7 @@ public:
     {
         if (MainWindow->objectName().isEmpty())
             MainWindow->setObjectName(QStringLiteral("MainWindow"));
-        MainWindow->resize(1047, 645);
+        MainWindow->resize(809, 645);
         centralWidget = new QWidget(MainWindow);
         centralWidget->setObjectName(QStringLiteral("centralWidget"));
         gridLayout_2 = new QGridLayout(centralWidget);
@@ -79,7 +79,7 @@ public:
         gridLayout_2->setObjectName(QStringLiteral("gridLayout_2"));
         groupBox_2 = new QGroupBox(centralWidget);
         groupBox_2->setObjectName(QStringLiteral("groupBox_2"));
-        groupBox_2->setMinimumSize(QSize(500, 0));
+        groupBox_2->setMinimumSize(QSize(300, 0));
         label = new QLabel(groupBox_2);
         label->setObjectName(QStringLiteral("label"));
         label->setGeometry(QRect(20, 320, 81, 31));
@@ -124,7 +124,7 @@ public:
         pbtnAnalysis->setSizePolicy(sizePolicy);
         lblCurIndex = new QLabel(groupBox_2);
         lblCurIndex->setObjectName(QStringLiteral("lblCurIndex"));
-        lblCurIndex->setGeometry(QRect(140, 200, 51, 31));
+        lblCurIndex->setGeometry(QRect(140, 180, 51, 31));
         lblCurIndex->setStyleSheet(QStringLiteral("border:2px solid red"));
         test_2 = new QPushButton(groupBox_2);
         test_2->setObjectName(QStringLiteral("test_2"));
@@ -146,21 +146,21 @@ public:
         lneDate = new QLineEdit(groupBox_2);
         lneDate->setObjectName(QStringLiteral("lneDate"));
         lneDate->setGeometry(QRect(180, 110, 81, 21));
-        pushButton = new QPushButton(groupBox_2);
-        pushButton->setObjectName(QStringLiteral("pushButton"));
-        pushButton->setGeometry(QRect(130, 310, 93, 28));
-        lsDeviceType = new QListWidget(groupBox_2);
-        lsDeviceType->setObjectName(QStringLiteral("lsDeviceType"));
-        lsDeviceType->setGeometry(QRect(160, 390, 121, 131));
-        lsDepartment = new QListWidget(groupBox_2);
-        lsDepartment->setObjectName(QStringLiteral("lsDepartment"));
-        lsDepartment->setGeometry(QRect(20, 390, 111, 127));
-        label_2 = new QLabel(groupBox_2);
-        label_2->setObjectName(QStringLiteral("label_2"));
-        label_2->setGeometry(QRect(20, 370, 72, 15));
+        pbtnReflash = new QPushButton(groupBox_2);
+        pbtnReflash->setObjectName(QStringLiteral("pbtnReflash"));
+        pbtnReflash->setGeometry(QRect(160, 340, 75, 23));
         label_3 = new QLabel(groupBox_2);
         label_3->setObjectName(QStringLiteral("label_3"));
-        label_3->setGeometry(QRect(160, 370, 72, 15));
+        label_3->setGeometry(QRect(160, 380, 72, 15));
+        lsDeviceType = new QListWidget(groupBox_2);
+        lsDeviceType->setObjectName(QStringLiteral("lsDeviceType"));
+        lsDeviceType->setGeometry(QRect(160, 400, 121, 131));
+        label_2 = new QLabel(groupBox_2);
+        label_2->setObjectName(QStringLiteral("label_2"));
+        label_2->setGeometry(QRect(20, 380, 72, 15));
+        lsDepartment = new QListWidget(groupBox_2);
+        lsDepartment->setObjectName(QStringLiteral("lsDepartment"));
+        lsDepartment->setGeometry(QRect(20, 400, 111, 127));
 
         gridLayout_2->addWidget(groupBox_2, 0, 0, 1, 1);
 
@@ -196,7 +196,7 @@ public:
         MainWindow->setCentralWidget(centralWidget);
         menuBar = new QMenuBar(MainWindow);
         menuBar->setObjectName(QStringLiteral("menuBar"));
-        menuBar->setGeometry(QRect(0, 0, 1047, 26));
+        menuBar->setGeometry(QRect(0, 0, 809, 26));
         MainWindow->setMenuBar(menuBar);
         mainToolBar = new QToolBar(MainWindow);
         mainToolBar->setObjectName(QStringLiteral("mainToolBar"));
@@ -219,14 +219,14 @@ public:
         test->setText(QApplication::translate("MainWindow", "\345\217\221\351\200\201\345\221\275\344\273\244", 0));
         pbtnAnalysis->setText(QApplication::translate("MainWindow", "\345\210\206\346\236\220\346\227\242\346\234\211\346\225\260\346\215\256", 0));
         lblCurIndex->setText(QString());
-        test_2->setText(QApplication::translate("MainWindow", "\345\210\267\346\226\260\350\256\276\345\244\207\345\217\267", 0));
+        test_2->setText(QApplication::translate("MainWindow", "\346\265\213\350\257\225", 0));
         rdbCurDay->setText(QApplication::translate("MainWindow", "\345\275\223\345\244\251\346\225\260\346\215\256", 0));
         rdbCurMonth->setText(QApplication::translate("MainWindow", "\345\275\223\346\234\210\346\225\260\346\215\256", 0));
         rdbOther->setText(QApplication::translate("MainWindow", "\346\214\207\345\256\232\346\227\245\346\234\237", 0));
         pbtnSetDate->setText(QApplication::translate("MainWindow", "\350\256\276\347\275\256", 0));
-        pushButton->setText(QApplication::translate("MainWindow", "PushButton", 0));
-        label_2->setText(QApplication::translate("MainWindow", "\344\276\233\347\224\265\346\256\265", 0));
+        pbtnReflash->setText(QApplication::translate("MainWindow", "\350\256\276\345\244\207\345\210\267\346\226\260", 0));
         label_3->setText(QApplication::translate("MainWindow", "\344\274\240\346\204\237\345\231\250", 0));
+        label_2->setText(QApplication::translate("MainWindow", "\344\276\233\347\224\265\346\256\265", 0));
         pbtnUIExpand->setText(QApplication::translate("MainWindow", ">>", 0));
         groupBox->setTitle(QApplication::translate("MainWindow", "IP", 0));
     } // retranslateUi

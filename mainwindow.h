@@ -34,7 +34,6 @@ public:
     ~MainWindow();
 protected:
     void timerEvent(QTimerEvent *);
-    QLabel *lblStatus;
 private slots:
     void on_pushButton_startS_clicked();
     void AcceptConnection();
@@ -51,27 +50,28 @@ private slots:
     void on_pbtnAnalysis_clicked();
     void slot_updateIndex(void );
     void on_test_2_clicked();
-    void slot_filter(bool);
+    void slot_filter(bool);    
     void on_pbtnSetDate_clicked();
-    void slot_dbStatus(bool);
-    void on_pushButton_clicked();
-
+    void slot_showMessage(QString);    
     void on_lsDepartment_clicked(const QModelIndex &index);
     void updateDeiveType(QString local);
+    void on_pbtnReflash_clicked();
+
 private:
     bool GetSocketByNo(qint16 deviceNo,QTcpSocket * &client,qint32 &cctNo);
     bool IsConnectedDevice(qint16 deviceNo);//判断设备是否已经连接
+    void connectDB();
     void UpdataAddress(qint16 no,QString ip,qint16 port);//更新设备地址
 
     //QVector<QPair<qint16,QTcpSocket*> > deviceAddress;
     QVector<DeviceAddress> deviceAddress;
     qint32 concentratorNo;
     qint16 count ;
-    CCommand cmd;
+    QSqlDatabase db;
     QTcpServer *tcpServer;
     Ui::MainWindow *ui;
     bool bExpandUI;
-    tbDisplayModel *sysDb;
+    MeasureDB *sysDb;
     QLabel *dbConnect;
     QTimer *timer;
 
