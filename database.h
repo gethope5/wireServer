@@ -10,6 +10,7 @@
 #include <qfiledialog.h>
 #include <qtextcodec.h>
 #define showALL 0
+//表示设备信息的本地mysql数据表格
 #define MYSQL_deviceTable_name "deviceinfo"
 class subSqlModel;
 class MeasureDB:public QObject
@@ -62,10 +63,12 @@ public:
 private:
     bool insertWireDb(const CCommand cmd,QString tm);
     bool insertBDb(const CCommand cmd);
+    bool insertCurrentDb(const CCommand cmd);
     bool displayType;//true,一个tableview显示多个table；false，一个table对应一个tableview
     QString dataTm;
     int curIndex;
     B_Data curBValue;
+    Current_Data curCurrentValue;
 signals:
     void updateInfo(QString);
 };

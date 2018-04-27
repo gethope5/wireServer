@@ -1,4 +1,4 @@
-﻿#include "mainwindow.h"
+﻿ #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include <QFile>
 #include <QSqlError>
@@ -38,6 +38,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->rdbOther,SIGNAL(clicked(bool)),this,SLOT(slot_filter(bool)));
     ui->rdbCurDay->setChecked(true);
     ui->lneDate->setEnabled(false);
+
 #if 0
     ui->lneDate->setAutoFillBackground(true);
     ui->pbtnSetDate->setAutoFillBackground(true);
@@ -323,7 +324,6 @@ void MainWindow::on_pbtnUIExpand_clicked()
     }
     bExpandUI=!bExpandUI;
 }
-
 void MainWindow::on_tbIP_clicked(const QModelIndex &index)
 {
     //    qDebug()<<"111"<<index.column()<<index.row();
@@ -333,7 +333,6 @@ void MainWindow::on_tbIP_clicked(const QModelIndex &index)
     sysDb-> ParaseCmd(tmp,deviceNo);
     qDebug()<<"cur package value="<<deviceNo;
 }
-
 void MainWindow::on_pbtnAnalysis_clicked()
 {
     timer->start(1000);
@@ -344,24 +343,6 @@ void MainWindow::slot_updateIndex(void )
     qDebug()<<"see";
     ui->lblCurIndex->setText(sysDb->getCurIndex());
 }
-QString GBK2UTF8(const QString &inStr)
-{
-    QTextCodec *gbk = QTextCodec::codecForName("GB18030");
-    QTextCodec *utf8 = QTextCodec::codecForName("UTF-8");
-
-    QString g2u = gbk->toUnicode(gbk->fromUnicode(inStr));              // gbk  convert utf8
-    return g2u;
-}
-inline QString UTF82GBK(const QString &inStr)
-{
-    QTextCodec *gbk = QTextCodec::codecForName("GB18030");
-    QTextCodec *utf8 = QTextCodec::codecForName("UTF-8");
-
-    QString utf2gbk = gbk->toUnicode(inStr.toLocal8Bit());
-    return utf2gbk;
-}
-
-
 void MainWindow::slot_filter(bool f)
 {
     QRadioButton *rdb=(QRadioButton *)this->sender();
@@ -402,10 +383,8 @@ void MainWindow::updateDeiveType(QString local)
     ui->lsDeviceType->clear();
     ui->lsDeviceType->addItems(sysDb->getDeviceType(local));
 }
-
 void MainWindow::on_pbtnReflash_clicked()
 {
-
     sysDb->udapteTableName();
     QTime dd;
     dd.start();

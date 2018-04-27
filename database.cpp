@@ -4,7 +4,7 @@
 
 #include <QtSql>
 #include "database.h"
-tableInfo MeasureDB::table4={CREATE_SQL4,TABLE_TITLE4,TABLE_NAME4,NULL,NULL};
+tableInfo MeasureDB::table4={CREATE_SQL4,TABLE_TITLE4,TABLE_NAME4,NULL};
 QPair<QStringList,QStringList> MeasureDB::deviceTables=QPair<QStringList,QStringList>(QStringList(""),QStringList(""));
 MeasureDB::MeasureDB(QTableView *m_tableView,QSqlDatabase &db)/*:model(NULL)*/
 {
@@ -21,7 +21,6 @@ MeasureDB::MeasureDB(QTableView *m_tableView,QSqlDatabase &db)/*:model(NULL)*/
     if(db.isValid())
     {
         m_db=db;
-        table4.model=new subSqlModel(m_db);
         table4.tableView=m_tableView;
         //        table4.tableView->setModel(table4.model);
         showDataTable(table4);
@@ -141,142 +140,28 @@ void MeasureDB::exportCSVFile(QString prePaths )
 void MeasureDB::showDataTable(tableInfo &tableName,QString filter)
 {
     qDebug()<<"cur filter string"<<filter;
-#if 1
-    if(tableName.model)
-    {
-        //        bool dbOpen=tableName.model->database().isOpen();
-        tableName.tableView->setModel(tableName.model);
-        //        tableName.model->setTable(tableName.tableName);
-        if(!tableName.model->database().isOpen())
-        {
-            tableName.model->database().open();
-        }
-        tableName.model->setEditStrategy(QSqlTableModel::OnRowChange);
-        qDebug()<<"show table name="<<tableName.tableName;
-#if 1
-        tableName.model->setFilter(QString("id>0"));
-        tableName.model->setSort(0,Qt::AscendingOrder);
 
-        QSqlQuery query(tableName.model->database());
-        QString strSql=QString("select * from %1 where tm like \'%2%\'").arg(tableName.tableName).arg(filter);
+    QSqlQueryModel *queryModel = new QSqlQueryModel(this);
+    QSqlQuery query(currDatabase());
 
-        if(query.exec(strSql))
-        {
-            qDebug()<<"string sql"<<strSql;
-            tableName.model->setquery(query);
-        }
-        else
-            qDebug()<<"not string sql"<<strSql;
-
-        tableName.model->select();
-        for(int i=0;i<tableName.titleName.split(',').count();i++)
-        {
-            QString tmp=tableName.titleName.split(',').at(i);
-            tableName.model->setHeaderData(i,Qt::Horizontal, QString(tmp.left(tmp.length()-1)));
-        }
-
-        while (tableName.model->canFetchMore())
-        {
-            tableName.model->fetchMore();
-        }
-        tableName.tableView->setModel(tableName.model);
-        tableName.tableView->setEditTriggers(QAbstractItemView::DoubleClicked|QAbstractItemView::EditKeyPressed);
-#if 1
-        //        tableName.tableView
-        tableName.tableView->setColumnWidth(0,60);
-        tableName.tableView->setColumnWidth(1,200);
-        tableName.tableView->setColumnWidth(2,160);
-        tableName.tableView->setColumnWidth(3,80);
-        tableName.tableView->setColumnWidth(4,40);
-#endif
-        tableName.tableView->selectRow(tableName.model->rowCount()-1);
-
-        for(int i=0;i<tableName.titleName.split(',').count();i++)
-        {
-            QString tmp=tableName.titleName.split(',').at(i);
-            if(!tmp.right(1).toInt())
-            {
-                //            qDebug()<<"display flag"<<i<<tmp.right(1).toInt();
-                tableName.tableView->setColumnHidden(i,true);
-            }
-        }
-#endif
-    }
-    else
-    {
-        qDebug()<<"model is NULL";
-    }
-#else
-    QString strFilter=QString("id>0");
-    QString fieldsSelect;
-
-
-    //    tableName.model->setTable(tableName.tableName);
-    if(!tableName.model->database().isOpen())
-    {
-        tableName.model->database().open();
-    }
-    tableName.model->setEditStrategy(QSqlTableModel::OnRowChange);
-    //        int distIndex=getDistIndex(tableName);
-    //        if(distIndex)
-    //        {
-    //            model->setSort(distIndex,Qt::AscendingOrder);
-    //        }
-
-    QSqlQuery query(tableName.model->database());
     QString strSql=QString("select * from %1 where tm like \'%2%\'").arg(tableName.tableName).arg(filter);
-
     if(query.exec(strSql))
     {
         qDebug()<<"string sql"<<strSql;
-        tableName.model->setquery(query);
+        //    QString strSql=QString::fromWCharArray(L"SELECT * from %1 where id>0").arg(tableName);
+        //qDebug()<<"show sql"<<strSql<<bExec;
+        queryModel->setQuery(query);
+        for(int i=0;i<tableName.titleName.split(',').count();i++)
+        {
+            QString tmp=tableName.titleName.split(',').at(i);
+            queryModel->setHeaderData(i,Qt::Horizontal, QString(tmp.left(tmp.length()-1)));
+        }
+        while (queryModel->canFetchMore())
+            queryModel->fetchMore();
+        tableName.tableView->setModel(queryModel);
     }
     else
-        qDebug()<<"not string sql"<<strSql;
-
-
-    tableName.model->select();
-    qDebug()<<"xls title"<<tableName.model->tableName()<<tableName.tableName<<
-              tableName.model->rowCount();//<<xlsTitleName<<ui->rdbDetailData->isChecked()<<ui->rdbSimpleData->isChecked()<<ui->rdbRangelData->isChecked();
-
-
-    while (tableName.model->canFetchMore())
-    {
-        tableName.model->fetchMore();
-    }
-    tableName.tableView->setModel(tableName.model);
-    tableName.tableView->setEditTriggers(QAbstractItemView::DoubleClicked|QAbstractItemView::EditKeyPressed);
-    //    tableName.tableView->setColumnWidth(model->record().indexOf("poleid"),40);
-    //    tableName.tableView->setColumnWidth(model->record().indexOf("id"),40);
-    //    tableName.tableView->setColumnWidth(model->record().indexOf("tm"),80);
-    //    tableName.tableView->setColumnWidth(model->record().indexOf("dist"),60);
-    //    tableName.tableView->setColumnWidth(model->record().indexOf("km"),80);
-    //    tableName.tableView->setColumnWidth(model->record().indexOf("station"),80);
-    //    tableName.tableView->setColumnWidth(-1,80);
-    //    tableName.tableView->selectRow(model->rowCount()-1);
-
-    for(int i=0;i<tableName.titleName.split(',').count();i++)
-    {
-        QString tmp=tableName.titleName.split(',').at(i);
-#if DEBUG_TITLE
-        if(tmp.right(1).toInt())
-        {
-            model->setHeaderData(j++,Qt::Horizontal, QString(tmp.left(tmp.length()-1)));
-        }
-    }
-#else
-        //        if(tmp.right(1).toInt())
-        //        {
-        //            tableName.model->setHeaderData(i,Qt::Horizontal, QString(tmp.left(tmp.length()-1)));
-        //        }
-        //        else
-        //        {
-        //            //                        qDebug()<<"display flag"<<i<<tmp.right(1).toInt()<<tmp<<model->record().indexOf(fieldsSelect.split(',').at(i));
-        //            tableName.tableView->setColumnHidden(tableName.model->record().indexOf(fieldsSelect.split(',').at(i)),true);//x倾角
-        //        }
-    }
-#endif
-#endif
+        qDebug()<<"query error,string sql"<<strSql;
 }
 bool MeasureDB::createTable(tableInfo table)
 {
@@ -479,18 +364,18 @@ bool MeasureDB::ParaseCmd(QByteArray packages, qint16 &deviceNo)
     char m[2];
     m[0]=0x0d;
     m[1]=0x0a;
-//    packages="fe0400020d400e0002065418875c0d0afe0400020d410e000200000000640d0afe0400020d420e0002067308765c0d0afe0400020d430e000230ac0000420d0a";
-//    qDebug()<<"dd"<<packages.toHex();
+    //    packages="fe0400020d400e0002065418875c0d0afe0400020d410e000200000000640d0afe0400020d420e0002067308765c0d0afe0400020d430e000230ac0000420d0a";
+    //    qDebug()<<"dd"<<packages.toHex();
     do
     {
         nEndIndex=packages.indexOf("0d0a");
         nFirstIndex=packages.indexOf("fe");
-//        qDebug()<<"index of"<<nEndIndex<<nFirstIndex<<packages.indexOf(m);
+        //        qDebug()<<"index of"<<nEndIndex<<nFirstIndex<<packages.indexOf(m);
         if((nFirstIndex!=-1)&&((nEndIndex-nFirstIndex)==28))
         {
             flag=ParaseSingleCmd(packages.mid(nFirstIndex,nEndIndex-nFirstIndex+4),deviceNo);
             i++;
-//            qDebug()<<i<<flag;
+            //            qDebug()<<i<<flag;
         }
         packages=packages.right(packages.count()-nEndIndex-4);
     }while((nEndIndex!=-1)&&(nFirstIndex!=-1));
@@ -562,15 +447,91 @@ bool MeasureDB::ParaseSingleCmd(const QByteArray &singleCmd,qint16 &deviceNo)
         }
         return true;
     }
-    else if(cmd.type==B_Type)\
+    else if(cmd.type==B_Type)
     {
         insertBDb(cmd);
+    }
+    else if(cmd.type==CURRENT_Type)
+    {
+        insertCurrentDb(cmd);
     }
     else
     {
         qDebug()<<"not right device type";
         return false;
     }
+}
+bool MeasureDB::insertCurrentDb(const CCommand cmd)
+{
+    //  float b1;             //1
+    //  float b2;
+    //  float temperature;
+    //  float temperatureIn;
+    //  float voltage;        //0x43
+    //  float voltage2;
+    //  float humidity;       //0x40
+    //  float humidityIn;
+    //  char package;
+    //    qDebug()<<"before"<<QString::number(curBValue.package,'g',16)<<"dd";
+
+    //仪表内的湿度及温度
+    if(cmd.key==0x30)
+    {
+        curCurrentValue.p1T1=(float)cmd.cv/100.0;
+        curCurrentValue.p1H1=(float)cmd.hi/100.0;
+        curCurrentValue.package|=0x01;
+    }
+    //外部温度及湿度
+    else if(cmd.key==0x31)
+    {
+        curCurrentValue.p2V1=(float)cmd.cv/100.0;
+        curCurrentValue.p2Current=(float)cmd.hi/100.0;
+        curCurrentValue.package|=0x02;
+    }
+    //b1及B2值
+    else if(cmd.key==0x32)
+    {
+        curCurrentValue.p3T2=cmd.cv;
+        curCurrentValue.p3H2=cmd.hi;
+        curCurrentValue.package|=0x04;
+    }
+    //集中器及采集器电压
+    else if(cmd.key==0x34)
+    {
+        curCurrentValue.p4Tmp1=(float)cmd.cv/1000.0;
+        curCurrentValue.p4Tmp2=(float)cmd.hi/1000.0;
+        curCurrentValue.package|=0x08;
+    }
+    //    qDebug()<<"b device ID"<<cmd.sRelayNo+cmd.sNo<<QString::number(curBValue.package,'g',16)<<"dd";
+
+    if((curCurrentValue.package&0x0f)==0x0f)
+    {
+        curCurrentValue.package=0;
+        QString curDeviceId=cmd.sRelayNo+cmd.sNo;
+        QString curTableName;
+        QSqlQuery sqlQuery(m_db);
+        bool bFlag=false;
+        int devIdIndex=deviceTables.first.indexOf(curDeviceId);
+        //        qDebug()<<"ok"<<deviceTables;
+        if(devIdIndex!=-1)
+        {
+            curTableName=deviceTables.second.at(devIdIndex);
+            emit updateInfo(curTableName);
+
+            QString strSql=QString("insert into %11 (tm,deviceNo,p1t1,p1h1,p2v1,p2current,p3t2,p3h2,p4tmp1,p4tmp2,remark) "\
+                                   "values (now(),\'%1\',%2,%3,%4,%5,%6,%7,%8,%9,\'%10\')")
+                    .arg(curDeviceId)
+                    .arg(curCurrentValue.p1T1).arg(curCurrentValue.p1H1)
+                    .arg(curCurrentValue.p2V1).arg(curCurrentValue.p2Current)
+                    .arg(curCurrentValue.p3T2).arg(curCurrentValue.p3H2)
+                    .arg(curCurrentValue.p4Tmp1).arg(curCurrentValue.p4Tmp2).arg("")
+                    .arg(curTableName);
+            bFlag=sqlQuery.exec(strSql);
+            qDebug()<<"insert data"<<strSql<<bFlag;
+            return bFlag;
+        }
+    }
+
 }
 bool MeasureDB::insertBDb(const CCommand cmd)
 {
@@ -583,7 +544,7 @@ bool MeasureDB::insertBDb(const CCommand cmd)
     //  float humidity;       //0x40
     //  float humidityIn;
     //  char package;
-//    qDebug()<<"before"<<QString::number(curBValue.package,'g',16)<<"dd";
+    //    qDebug()<<"before"<<QString::number(curBValue.package,'g',16)<<"dd";
 
     //仪表内的湿度及温度
     if(cmd.key==0x40)
@@ -613,7 +574,7 @@ bool MeasureDB::insertBDb(const CCommand cmd)
         curBValue.voltage2=(float)cmd.hi/1000.0;
         curBValue.package|=0x08;
     }
-//    qDebug()<<"b device ID"<<cmd.sRelayNo+cmd.sNo<<QString::number(curBValue.package,'g',16)<<"dd";
+    //    qDebug()<<"b device ID"<<cmd.sRelayNo+cmd.sNo<<QString::number(curBValue.package,'g',16)<<"dd";
 
     if((curBValue.package&0x0f)==0x0f)
     {
@@ -630,7 +591,7 @@ bool MeasureDB::insertBDb(const CCommand cmd)
             emit updateInfo(curTableName);
 
             QString strSql=QString("insert into %11 (tm,deviceNo,b1,b2,temperature,temperatureIn,voltage,voltage2,humidity,humidityIn,remark) "\
-                           "values (now(),\'%1\',%2,%3,%4,%5,%6,%7,%8,%9,\'%10\')")
+                                   "values (now(),\'%1\',%2,%3,%4,%5,%6,%7,%8,%9,\'%10\')")
                     .arg(curDeviceId).arg(curBValue.b1).arg(curBValue.b2).arg(curBValue.temperature).arg(curBValue.temperatureIn)
                     .arg(curBValue.voltage).arg(curBValue.voltage2).arg(curBValue.humidity).arg(curBValue.humidityIn).arg("")
                     .arg(curTableName);
@@ -668,7 +629,7 @@ bool MeasureDB::insertWireDb(const CCommand cmd,QString tm)
         QString curTableName;
         //        deviceId,tableName
         int devIdIndex=deviceTables.first.indexOf(curDeviceId);
-qDebug()<<"curDevice iD"<<curDeviceId;
+        qDebug()<<"curDevice iD"<<curDeviceId;
         if(devIdIndex!=-1)
         {
             curTableName=deviceTables.second.at(devIdIndex);
@@ -777,13 +738,12 @@ void MeasureDB::parseAll(void)
             QByteArray mm=parseOnePackage(curIndex++,cc);
 
             dataTm=cc.time;
-            if( ParaseCmd( mm ,d))
+            if(ParaseCmd( mm ,d))
             {
                 qDebug()<<"time"<<cc.time;
             }
         }
     }
-    //    m_db.commit();
 }
 QString MeasureDB::getCurIndex(void)
 {

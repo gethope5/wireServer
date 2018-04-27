@@ -4,7 +4,7 @@
 #include <QtGui>
 #include <qtableview.h>
 //#include "database.h"
-#include "subsqlmodel.h"
+//#include "subsqlmodel.h"
 enum eCONNECTSTATUS
 {
     DEVICE_CONNECTED,
@@ -52,12 +52,6 @@ struct tableInfo
     QString titleName;      //2表格字段中文名
     QString tableName;      //3表格名称
     QTableView *tableView;
-    subSqlModel *model ;
-//    tableInfo()
-//    {
-//        tableView=NULL;
-//        model=NULL;
-//    }
 };
 
 //电屏铠数据解析包
@@ -119,13 +113,38 @@ struct B_Data
       package=0;
   }
 };
+struct Current_Data
+{
+  float p1T1;             //1
+  float p1H1;
+  float p2V1;
+  float p2Current;
+  float p3T2;        //0x43
+  float p3H2;
+  float p4Tmp1;       //0x40
+  float p4Tmp2;
+  char package;
+  Current_Data()
+  {
+      p1T1=0;
+      p1H1=0;
+      p2V1=0;
+      p2Current=0;
+      p3T2=0;
+      p3H2=0;
+      p4Tmp1=0;
+      p4Tmp2=0;
+      package=0;
+  }
+};
 #define DB_PATHS  "./cc1.db"
 //添加设备
 #define ADD_DEVICE_UTF8 "\346\267\273\345\212\240\350\256\276\345\244\207"
 //当前连接数
 #define CUR_CONNECTS_UTF8 "\345\275\223\345\211\215\350\277\236\346\216\245\346\225\260:"
-#define Wire_Type 0x06
-#define B_Type 0x0e
+#define Wire_Type 0x06      //电屏铠
+#define B_Type 0x0e         //B值监测
+#define CURRENT_Type 0x03   //泄露电流
 
 //#define "bdetectkm"
 #endif // HEADDATABASE_H

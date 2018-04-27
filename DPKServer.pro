@@ -18,14 +18,14 @@ SOURCES += main.cpp\
         mainwindow.cpp \
     expandpushbutton.cpp \
     database.cpp \
-    subsqlmodel.cpp \
+#    subsqlmodel.cpp \
     setdatedlg.cpp
 
 HEADERS  += mainwindow.h \
     expandpushbutton.h \
     database.h \
     headDatabase.h \
-    subsqlmodel.h \
+#    subsqlmodel.h \
     setdatedlg.h
 
 FORMS    += mainwindow.ui \
