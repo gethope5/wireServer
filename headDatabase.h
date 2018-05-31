@@ -137,6 +137,28 @@ struct Current_Data
       package=0;
   }
 };
+struct angle_Data
+{
+    float xAngle;
+    float yAngle;
+    float temperature;
+    float humidity;
+    float voltage1;
+    float voltage2;
+    QString remark;
+    char package;
+    angle_Data()
+    {
+        xAngle=0;
+        yAngle=0;
+        temperature=0;
+        humidity=0;
+        voltage1=0;
+        voltage2=0;
+        remark="";
+        package=0;
+    }
+};
 #define DB_PATHS  "./cc1.db"
 //添加设备
 #define ADD_DEVICE_UTF8 "\346\267\273\345\212\240\350\256\276\345\244\207"
@@ -145,6 +167,6 @@ struct Current_Data
 #define Wire_Type 0x06      //电屏铠
 #define B_Type 0x0e         //B值监测
 #define CURRENT_Type 0x03   //泄露电流
-
+#define ANGLE_Type 0x05   //泄露电流
 //#define "bdetectkm"
 #endif // HEADDATABASE_H

@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'mainwindow.ui'
 **
-** Created by: Qt User Interface Compiler version 5.5.1
+** Created by: Qt User Interface Compiler version 5.8.0
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
 ********************************************************************************/
@@ -212,23 +212,23 @@ public:
 
     void retranslateUi(QMainWindow *MainWindow)
     {
-        MainWindow->setWindowTitle(QApplication::translate("MainWindow", "MainWindow", 0));
+        MainWindow->setWindowTitle(QApplication::translate("MainWindow", "MainWindow", Q_NULLPTR));
         groupBox_2->setTitle(QString());
         label->setText(QString());
-        pushButton_startS->setText(QApplication::translate("MainWindow", "\345\274\200\345\220\257\346\234\215\345\212\241", 0));
-        test->setText(QApplication::translate("MainWindow", "\345\217\221\351\200\201\345\221\275\344\273\244", 0));
-        pbtnAnalysis->setText(QApplication::translate("MainWindow", "\345\210\206\346\236\220\346\227\242\346\234\211\346\225\260\346\215\256", 0));
+        pushButton_startS->setText(QApplication::translate("MainWindow", "\345\274\200\345\220\257\346\234\215\345\212\241", Q_NULLPTR));
+        test->setText(QApplication::translate("MainWindow", "\345\217\221\351\200\201\345\221\275\344\273\244", Q_NULLPTR));
+        pbtnAnalysis->setText(QApplication::translate("MainWindow", "\345\210\206\346\236\220\346\227\242\346\234\211\346\225\260\346\215\256", Q_NULLPTR));
         lblCurIndex->setText(QString());
-        test_2->setText(QApplication::translate("MainWindow", "\346\265\213\350\257\225", 0));
-        rdbCurDay->setText(QApplication::translate("MainWindow", "\345\275\223\345\244\251\346\225\260\346\215\256", 0));
-        rdbCurMonth->setText(QApplication::translate("MainWindow", "\345\275\223\346\234\210\346\225\260\346\215\256", 0));
-        rdbOther->setText(QApplication::translate("MainWindow", "\346\214\207\345\256\232\346\227\245\346\234\237", 0));
-        pbtnSetDate->setText(QApplication::translate("MainWindow", "\350\256\276\347\275\256", 0));
-        pbtnReflash->setText(QApplication::translate("MainWindow", "\350\256\276\345\244\207\345\210\267\346\226\260", 0));
-        label_3->setText(QApplication::translate("MainWindow", "\344\274\240\346\204\237\345\231\250", 0));
-        label_2->setText(QApplication::translate("MainWindow", "\344\276\233\347\224\265\346\256\265", 0));
-        pbtnUIExpand->setText(QApplication::translate("MainWindow", ">>", 0));
-        groupBox->setTitle(QApplication::translate("MainWindow", "IP", 0));
+        test_2->setText(QApplication::translate("MainWindow", "\346\265\213\350\257\225", Q_NULLPTR));
+        rdbCurDay->setText(QApplication::translate("MainWindow", "\345\275\223\345\244\251\346\225\260\346\215\256", Q_NULLPTR));
+        rdbCurMonth->setText(QApplication::translate("MainWindow", "\345\275\223\346\234\210\346\225\260\346\215\256", Q_NULLPTR));
+        rdbOther->setText(QApplication::translate("MainWindow", "\346\214\207\345\256\232\346\227\245\346\234\237", Q_NULLPTR));
+        pbtnSetDate->setText(QApplication::translate("MainWindow", "\350\256\276\347\275\256", Q_NULLPTR));
+        pbtnReflash->setText(QApplication::translate("MainWindow", "\350\256\276\345\244\207\345\210\267\346\226\260", Q_NULLPTR));
+        label_3->setText(QApplication::translate("MainWindow", "\344\274\240\346\204\237\345\231\250", Q_NULLPTR));
+        label_2->setText(QApplication::translate("MainWindow", "\344\276\233\347\224\265\346\256\265", Q_NULLPTR));
+        pbtnUIExpand->setText(QApplication::translate("MainWindow", ">>", Q_NULLPTR));
+        groupBox->setTitle(QApplication::translate("MainWindow", "IP", Q_NULLPTR));
     } // retranslateUi
 
 };

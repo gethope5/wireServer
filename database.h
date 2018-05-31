@@ -64,11 +64,13 @@ private:
     bool insertWireDb(const CCommand cmd,QString tm);
     bool insertBDb(const CCommand cmd);
     bool insertCurrentDb(const CCommand cmd);
+    bool insertAngleDb(const CCommand cmd);
     bool displayType;//true,一个tableview显示多个table；false，一个table对应一个tableview
     QString dataTm;
     int curIndex;
     B_Data curBValue;
     Current_Data curCurrentValue;
+    angle_Data curAngleValue;
 signals:
     void updateInfo(QString);
 };

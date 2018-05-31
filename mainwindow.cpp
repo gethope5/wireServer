@@ -11,7 +11,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-
+    setWindowTitle("wire+B+current+angle-0531");
     dbConnect=new QLabel(ui->statusBar);
     dbConnect->setFixedWidth(100);
     ui->statusBar->addPermanentWidget(dbConnect);
@@ -127,7 +127,7 @@ void MainWindow::ReadData()
     sysDb->showDataTable(MeasureDB::table4);
 
     qint16 deviceNo;
-    qDebug()<<"data"<<data<<data.count()<<data.toHex();
+//    qDebug()<<"data"<<data<<data.count()<<data.toHex();
     sysDb->ParaseCmd(data.toHex(),deviceNo);
 
     //更新设备地址表

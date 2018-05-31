@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'setdatedlg.ui'
 **
-** Created by: Qt User Interface Compiler version 5.5.1
+** Created by: Qt User Interface Compiler version 5.8.0
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
 ********************************************************************************/
@@ -49,9 +49,9 @@ public:
 
     void retranslateUi(QDialog *setDateDlg)
     {
-        setDateDlg->setWindowTitle(QApplication::translate("setDateDlg", "Dialog", 0));
-        pbtnCancel->setText(QApplication::translate("setDateDlg", "Cancel", 0));
-        pbtnOk->setText(QApplication::translate("setDateDlg", "OK", 0));
+        setDateDlg->setWindowTitle(QApplication::translate("setDateDlg", "Dialog", Q_NULLPTR));
+        pbtnCancel->setText(QApplication::translate("setDateDlg", "Cancel", Q_NULLPTR));
+        pbtnOk->setText(QApplication::translate("setDateDlg", "OK", Q_NULLPTR));
     } // retranslateUi
 
 };

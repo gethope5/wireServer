@@ -147,7 +147,7 @@ void MeasureDB::showDataTable(tableInfo &tableName,QString filter)
     QString strSql=QString("select * from %1 where tm like \'%2%\'").arg(tableName.tableName).arg(filter);
     if(query.exec(strSql))
     {
-        qDebug()<<"string sql"<<strSql;
+//        qDebug()<<"string sql"<<strSql;
         //    QString strSql=QString::fromWCharArray(L"SELECT * from %1 where id>0").arg(tableName);
         //qDebug()<<"show sql"<<strSql<<bExec;
         queryModel->setQuery(query);
@@ -244,7 +244,7 @@ bool MeasureDB::insertIPPackageRecord(IPOrignal &dval)
             .arg(dval.packages);
 
     flag=query.exec(sqlBuffer);
-    qDebug()<<"sql="<<sqlBuffer;
+    qDebug()<<"cur original data,sql="<<dval.packages;
 
     //    isCloseDB();
     return flag;
@@ -455,9 +455,13 @@ bool MeasureDB::ParaseSingleCmd(const QByteArray &singleCmd,qint16 &deviceNo)
     {
         insertCurrentDb(cmd);
     }
+    else if(cmd.type==ANGLE_Type)
+    {
+        insertAngleDb(cmd);
+    }
     else
     {
-        qDebug()<<"not right device type";
+        qDebug()<<"not right device type"<<cmd.type;
         return false;
     }
 }
@@ -484,7 +488,7 @@ bool MeasureDB::insertCurrentDb(const CCommand cmd)
     //外部温度及湿度
     else if(cmd.key==0x31)
     {
-        curCurrentValue.p2V1=(float)cmd.cv/100.0;
+        curCurrentValue.p2V1=(float)cmd.cv/1000.0;
         curCurrentValue.p2Current=(float)cmd.hi/100.0;
         curCurrentValue.package|=0x02;
     }
@@ -504,7 +508,7 @@ bool MeasureDB::insertCurrentDb(const CCommand cmd)
     }
     //    qDebug()<<"b device ID"<<cmd.sRelayNo+cmd.sNo<<QString::number(curBValue.package,'g',16)<<"dd";
 
-    if((curCurrentValue.package&0x0f)==0x0f)
+    if((curCurrentValue.package&0x0f)==0x07)
     {
         curCurrentValue.package=0;
         QString curDeviceId=cmd.sRelayNo+cmd.sNo;
@@ -518,7 +522,20 @@ bool MeasureDB::insertCurrentDb(const CCommand cmd)
             curTableName=deviceTables.second.at(devIdIndex);
             emit updateInfo(curTableName);
 
-            QString strSql=QString("insert into %11 (tm,deviceNo,p1t1,p1h1,p2v1,p2current,p3t2,p3h2,p4tmp1,p4tmp2,remark) "\
+//            `id` bigint(20) NOT NULL AUTO_INCREMENT,
+//            `tm` datetime DEFAULT NULL,
+//            `deviceNo` text,
+//            `current` float DEFAULT NULL COMMENT '泄露电流',
+//            `t1` float DEFAULT NULL COMMENT '温度1',
+//            `h1` float DEFAULT NULL COMMENT '湿度1',
+//            `v1` float DEFAULT NULL COMMENT '电压',
+//            `t2` float DEFAULT NULL COMMENT '温度2',
+//            `h2` float DEFAULT NULL COMMENT '湿度2',
+//            `tmp1` float DEFAULT NULL COMMENT '湿度',
+//            `tmp2` float DEFAULT NULL COMMENT '仪表内湿度',
+//            `remark` text COMMENT '备注',
+
+            QString strSql=QString("insert into %11 (tm,deviceNo,t1,h1,v1,current,t2,h2,tmp1,tmp2,remark) "\
                                    "values (now(),\'%1\',%2,%3,%4,%5,%6,%7,%8,%9,\'%10\')")
                     .arg(curDeviceId)
                     .arg(curCurrentValue.p1T1).arg(curCurrentValue.p1H1)
@@ -527,12 +544,81 @@ bool MeasureDB::insertCurrentDb(const CCommand cmd)
                     .arg(curCurrentValue.p4Tmp1).arg(curCurrentValue.p4Tmp2).arg("")
                     .arg(curTableName);
             bFlag=sqlQuery.exec(strSql);
-            qDebug()<<"insert data"<<strSql<<bFlag;
+            qDebug()<<"insert data current"<<strSql<<bFlag;
             return bFlag;
         }
     }
 
 }
+bool MeasureDB::insertAngleDb(const CCommand cmd)
+{
+    //fe0500140a50050002 0796 0f36 430d0a
+    //fe0500140a51050002 331d 005b 0d0d0a
+    //fe0500140a52050002 331d 0074 270d0a
+    //fe0500140a53052357fadb0d30070d0a
+    //湿度及温度
+    if(cmd.key==0x50)
+    {
+        curAngleValue.temperature=(float)cmd.cv/100.0;
+        curAngleValue.humidity=(float)cmd.hi/100.0;
+        curAngleValue.package|=0x01;
+    }
+    //电压及X倾角
+    else if(cmd.key==0x51)
+    {
+        curAngleValue.voltage1=(float)cmd.cv/1000.0;
+        curAngleValue.xAngle=(float)cmd.hi/100.0;
+        curAngleValue.package|=0x02;
+    }
+    //电压及X倾角
+    else if(cmd.key==0x52)
+    {
+        curAngleValue.voltage2=cmd.cv/1000.0;
+        curAngleValue.yAngle=cmd.hi/100.0;
+        curAngleValue.package|=0x04;
+    }
+    //    qDebug()<<"b device ID"<<cmd.sRelayNo+cmd.sNo<<QString::number(curBValue.package,'g',16)<<"dd";
+
+    if((curAngleValue.package&0x0f)==0x07)
+    {
+        curAngleValue.package=0;
+        QString curDeviceId=cmd.sRelayNo+cmd.sNo;
+        QString curTableName;
+        QSqlQuery sqlQuery(m_db);
+        bool bFlag=false;
+        int devIdIndex=deviceTables.first.indexOf(curDeviceId);
+        //        qDebug()<<"ok"<<deviceTables;
+        if(devIdIndex!=-1)
+        {
+            curTableName=deviceTables.second.at(devIdIndex);
+            emit updateInfo(curTableName);
+
+//            REATE TABLE `anglexining` (
+//              `id` bigint(20) NOT NULL AUTO_INCREMENT,
+//              `tm` datetime DEFAULT NULL,
+//              `deviceNo` text,
+//              `xAngle` float(8,0) DEFAULT NULL COMMENT 'X倾角',
+//              `yAngle` float DEFAULT NULL COMMENT 'Y倾角',
+//              `temperature` float DEFAULT NULL COMMENT '温度',
+//              `humidity` float DEFAULT NULL COMMENT '湿度',
+//              `voltage1` float DEFAULT NULL COMMENT '电压1',
+//              `voltage2` float DEFAULT NULL COMMENT '电压2',
+//              `remark` text COMMENT '注释',
+//              PRIMARY KEY (`id`)
+            QString strSql=QString("insert into %9 (tm,deviceNo,xAngle,yAngle,temperature,humidity,voltage1,voltage2,remark) "\
+                                   "values (now(),\'%1\',round(%2,2),round(%3,2),%4,%5,%6,%7,\'%8\')")
+                    .arg(curDeviceId)
+                    .arg(curAngleValue.xAngle).arg(curAngleValue.yAngle)
+                    .arg(curAngleValue.temperature).arg(curAngleValue.humidity)
+                    .arg(curAngleValue.voltage1).arg(curAngleValue.voltage2).arg("")
+                    .arg(curTableName);
+            bFlag=sqlQuery.exec(strSql);
+            qDebug()<<"insert data angle"<<strSql<<bFlag;
+            return bFlag;
+        }
+    }
+}
+
 bool MeasureDB::insertBDb(const CCommand cmd)
 {
     //  float b1;             //1
@@ -629,7 +715,7 @@ bool MeasureDB::insertWireDb(const CCommand cmd,QString tm)
         QString curTableName;
         //        deviceId,tableName
         int devIdIndex=deviceTables.first.indexOf(curDeviceId);
-        qDebug()<<"curDevice iD"<<curDeviceId;
+        //        qDebug()<<"curDevice iD"<<curDeviceId;
         if(devIdIndex!=-1)
         {
             curTableName=deviceTables.second.at(devIdIndex);
@@ -646,7 +732,7 @@ bool MeasureDB::insertWireDb(const CCommand cmd,QString tm)
                         .arg(dataTm).arg(curDeviceId).arg(cmd.lineNo).arg(QString::number(cmd.cv/1000.000,'f',3)).arg(QString::number(cmd.hi/1000.000,'f',3)).arg(wendu).arg(shidu)
                         .arg(curTableName);
             }
-            qDebug()<<"insert data"<<strSql;
+//            qDebug()<<"insert data"<<strSql;
             return sqlQuery.exec(strSql);
         }
         else
@@ -823,7 +909,7 @@ void MeasureDB::udapteTableName(void)
             deviceTables.second<<query.value(1).toString();
             if(i<deviceTables.first.count())
             {
-                qDebug()<<"device table"<<i<<deviceTables.first.at(i)<<deviceTables.second.at(i)<<query.value(2).toString()<<query.value(3).toString();
+                qDebug()<<"devices=,"<<i<<deviceTables.first.at(i)<<deviceTables.second.at(i)<<query.value(2).toString()<<query.value(3).toString();
                 i++;
             }
         }

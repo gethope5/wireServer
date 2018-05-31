@@ -9,10 +9,10 @@ QT       += sql
 QT       += network
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-TARGET = DPKServer
+TARGET = DPKServer-0531
 TEMPLATE = app
 
-#CONFIG += console
+CONFIG += console
 
 SOURCES += main.cpp\
         mainwindow.cpp \
