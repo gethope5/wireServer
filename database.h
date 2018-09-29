@@ -9,16 +9,29 @@
 #include <qtableview.h>
 #include <qfiledialog.h>
 #include <qtextcodec.h>
+#define jiaozuoCurrent_Device1  "030007000703"
+#define jiaozuoCurrent_Device2  "030007000603"
 #define showALL 0
 //表示设备信息的本地mysql数据表格
 #define MYSQL_deviceTable_name "deviceinfo"
+
 class subSqlModel;
+#if sub_thread
+class MeasureDB:public QThread
+{
+    Q_OBJECT
+public:
+    MeasureDB(QTableView *m_tableView,QSqlDatabase &db,QObject *parent = 0 );
+    MeasureDB(QVector<QTableView *> tableView);
+#else
 class MeasureDB:public QObject
 {
     Q_OBJECT
 public:
     MeasureDB(QTableView *m_tableView,QSqlDatabase &db);
     MeasureDB(QVector<QTableView *> tableView);
+    static bool bParse;
+#endif
     bool insertIPPackageRecord(IPOrignal &dval);
     ~MeasureDB();
     bool createTable(tableInfo);
@@ -35,11 +48,10 @@ public:
     void exportCSVFile(QString);
     void isOpenDB(void);
     void isCloseDB(void);
-    wireOrignalData parseWirePackage(wireCmdPackage);
     QByteArray parseOnePackage(int index,IPOrignal &oneRecord);
 
-    bool ParaseSingleCmd(const QByteArray &singleCmd,qint16 &deviceNo);
-    bool ParaseCmd(QByteArray packages, qint16 &deviceNo);
+    bool parseOneCmd(const originalPackage &singleCmd );
+    bool ParaseCmd(originalPackage & packages );
     void UpdataStatursDB(CCommand command);
     void parseAll(void);
     void tran(void);
@@ -54,23 +66,47 @@ public:
 
     void showTables(void);
     QString getCurIndex(void);
-    bool insertDeviceStatus(void);
     QString getTableName(QString devieNo);
     void udapteTableName(void);
     static QPair<QStringList,QStringList> deviceTables;//deviceId,tableName
+    static QStringList deviceName;
+    static QStringList deviceTypes;
     QStringList getDeviceType(QString department);
     QStringList getDeparment(void);
+    QStringList   speicalCurrentDevice;
+    void run(void);
+    IPOrignal curIPData;
+    long wireCount;
+    long currentCount;
+    long angleCount;
+    QTimer *timer;
+    void startUpdateTable(void);
+    eDeviceType getCurType(QString curDeviceID);
+private slots:
+    void slot_showTable(void);
 private:
-    bool insertWireDb(const CCommand cmd,QString tm);
-    bool insertBDb(const CCommand cmd);
-    bool insertCurrentDb(const CCommand cmd);
-    bool insertAngleDb(const CCommand cmd);
+    bool insertWireDb(const CCommand cmd,QString tm,originalPackage pac);
+    bool insertBDb(const CCommand cmd,originalPackage pac);
+    bool insertCurrentDb(const CCommand cmd,originalPackage pac);
+    bool insertAngleDb(const CCommand cmd,originalPackage pac);
+    bool insertBranchDb(const CCommand cmd,originalPackage pac);
+    bool insertForceDb(const CCommand cmd,originalPackage pac);
+    bool insertAirDb(const CCommand cmd,originalPackage pac);
+
     bool displayType;//true,一个tableview显示多个table；false，一个table对应一个tableview
+
     QString dataTm;
+    originalPackage package;
     int curIndex;
     B_Data curBValue;
+    branch_Data curBranch;
     Current_Data curCurrentValue;
     angle_Data curAngleValue;
+    force_Data curForceValue;
+    air_Data curAirValue;
+    QString getCurTable(QString curDeviceID);
+    void rollback(void);
+    QVector<long> modifyIds;
 signals:
     void updateInfo(QString);
 };
