@@ -40,9 +40,6 @@ public:
     QSqlDatabase m_db;
     void showDataTable(tableInfo &tableName,QString filter=QDateTime::currentDateTime().toString("yyyy-MM-dd"));
     bool modifyRecord(int id, const QString& station,const QString& pid,const int structFlg);
-    bool insertRecordWireData(wireOrignalData & dval);
-    void Transaction(void);
-    void Commit(void);
     QSqlDatabase currDatabase(void);
     QString curDataName;
     void exportCSVFile(QString);
@@ -54,23 +51,21 @@ public:
     bool ParaseCmd(originalPackage & packages );
     void UpdataStatursDB(CCommand command);
     void parseAll(void);
-    void tran(void);
-    void commit(void);
     static QString tbPackagesName;
     static QString tbDetectDataName;
 
     static tableInfo table1;
     static tableInfo table3;
     static tableInfo table4;
+    static deviceInfos deviceInfo; //存储当前所有设备的基础信息，包括编号、表格名称、位置、类型(存储于表格的remark列)
+
     QStringList getALLDeviceNo(void);
 
     void showTables(void);
     QString getCurIndex(void);
     QString getTableName(QString devieNo);
     void udapteTableName(void);
-    static QPair<QStringList,QStringList> deviceTables;//deviceId,tableName
-    static QStringList deviceName;
-    static QStringList deviceTypes;
+//    QVector<QPair<>
     QStringList getDeviceType(QString department);
     QStringList getDeparment(void);
     QStringList   speicalCurrentDevice;
@@ -80,16 +75,23 @@ public:
     long currentCount;
     long angleCount;
     QTimer *timer;
-    void startUpdateTable(void);
-    eDeviceType getCurType(QString curDeviceID);
+    void transaction(void);
+    void commit(void);
+    void rollback(void);
+    bool insertWireRec(wire_Data & dval,QString table);
+    bool insertCurrentRec(QString table,QString deviceNO,current_Data curCurrentValue,QString tm);
+    bool insertBranchRec(QString table,QString deviceNo,branch_Data curCurrentValue,QString tm);
+    void getDataRecords(simData &devcieInfo);
+    QString  getDeviceTable(QString device );
+    eDeviceType getType(QString curDeviceID);
 private slots:
     void slot_showTable(void);
 private:
-    bool insertWireDb(const CCommand cmd,QString tm,originalPackage pac);
+    bool updateWireDb(const CCommand cmd,QString tm,originalPackage pac);
     bool insertBDb(const CCommand cmd,originalPackage pac);
-    bool insertCurrentDb(const CCommand cmd,originalPackage pac);
+    bool updateCurrentDb(const CCommand cmd,originalPackage pac);
     bool insertAngleDb(const CCommand cmd,originalPackage pac);
-    bool insertBranchDb(const CCommand cmd,originalPackage pac);
+    bool updateBranchDb(const CCommand cmd,originalPackage pac);
     bool insertForceDb(const CCommand cmd,originalPackage pac);
     bool insertAirDb(const CCommand cmd,originalPackage pac);
 
@@ -100,15 +102,20 @@ private:
     int curIndex;
     B_Data curBValue;
     branch_Data curBranch;
-    Current_Data curCurrentValue;
+    current_Data curCurrentValue;
     angle_Data curAngleValue;
     force_Data curForceValue;
     air_Data curAirValue;
     QString getCurTable(QString curDeviceID);
-    void rollback(void);
     QVector<long> modifyIds;
+    QString updateRecentTime(QString deviceNo,QString tableName);
+    void utf8_unicode( unsigned char *inbuf, unsigned char *outbuf, int inlen);
+    void unicode_utf8(const unsigned int inbuf, unsigned char *outbuf, int* outlen, int mlen);
+
+
 signals:
     void updateInfo(QString);
+    void updateDevice(void);
 };
 
 #endif

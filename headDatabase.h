@@ -13,18 +13,8 @@ enum eCONNECTSTATUS
     SERVER_CONNECTED,
     SERVER_DISCONNECT,
 };
-typedef struct
-{
-    int id;                 //1     id
-    QString time;           //2     时间
-    QString deviceType;     //4     设备类型
-    QString serialNumber;   //5     设备编号
-    QString sensorNumber;       //6     传感器编号
-    QString voltage;        //7     设备电压
-    QString eleCurrent;     //8     设备电流
-    QString temperature;    //9     设备温度
-    QString humidity;       //10     设备湿度
-}wireOrignalData;
+
+
 //                       "ID1,                                  时间1,            设备类型1,              设备编号1,                  传感器编号1,             设备电压1,           设备电流1,               设备温度1,               设备湿度1"
 #define CREATE_SQL1      "id INTEGER PRIMARY KEY AUTOINCREMENT, time varchar(30),deviceType varchar(10),serialNumber varchar(20),sersorNumber varchar(20),voltage varchar(20),eleCurrent varchar(20),temperature varchar(10),humidity varchar(10)"
 #define TABLE_TITLE1     "ID1,时间1,设备类型1,设备编号1,传感器编号1,电压1,电流1,温度1,湿度1"
@@ -69,6 +59,7 @@ struct wireCmdPackage
     qint8 cks;      //校验和
     qint16 enter;//处理多余的回车换行
 };
+
 struct CCommand
 {
     QString sRelayNo;   //集中器编号
@@ -92,6 +83,28 @@ struct CCommand
     QString deviceId;
     QByteArray packages;
 };
+//电屏铠表格的数据结构
+struct wire_Data
+{
+    QString tm;         //2     时间
+    QString deviceNo;   //3     设备编号
+    int lineNo;         //4     传感器编号
+    QString voltage;    //5     设备电压
+    QString current;    //6     设备电流
+    QString temperature;//7     设备温度
+    QString humidity;   //8     设备湿度
+    wire_Data()
+    {
+        tm="";
+        deviceNo="";
+        lineNo=0;
+        voltage="";
+        current="";
+        temperature="";
+        humidity="";
+    }
+};
+//b值检测数据结构
 struct B_Data
 {
     float b1;             //1
@@ -117,8 +130,21 @@ struct B_Data
         package=0;
     }
 };
-struct Current_Data
+struct current_Data
 {
+    //            `id` bigint(20) NOT NULL AUTO_INCREMENT,
+    //            `tm` datetime DEFAULT NULL,
+    //            `deviceNo` text,
+    //            `current` float DEFAULT NULL COMMENT '泄露电流',
+    //            `t1` float DEFAULT NULL COMMENT '温度1',
+    //            `h1` float DEFAULT NULL COMMENT '湿度1',
+    //            `v1` float DEFAULT NULL COMMENT '电压',
+    //            `t2` float DEFAULT NULL COMMENT '温度2',
+    //            `h2` float DEFAULT NULL COMMENT '湿度2',
+    //            `tmp1` float DEFAULT NULL COMMENT '湿度',
+    //            `tmp2` float DEFAULT NULL COMMENT '仪表内湿度',
+    //            `remark` text COMMENT '备注',
+
     float p1T1;             //1
     float p1H1;
     float p2V1;
@@ -129,7 +155,7 @@ struct Current_Data
     float p4Tmp2;
     char package;
     QString tm;
-    Current_Data()
+    current_Data()
     {
         p1T1=0;
         p1H1=0;
@@ -166,7 +192,6 @@ struct angle_Data
     }
 };
 
-
 struct branch_Data
 {
     float aV;       //a相电压
@@ -177,6 +202,7 @@ struct branch_Data
     float cC;       //c相电压
     float t;        //温度
     float h;        //湿度
+    QString tm;
     QString tmp1;   //备注1
     QString tmp2;   //备注2
     QString remark; //备注3
@@ -253,23 +279,69 @@ struct air_Data
         package=0;
     }
 };
+
 enum eDeviceType
 {
-    WIRE,       //1 电屏铠
-    BVALUE,     //2 B值检测
-    ANGLE,      //3 支柱斜率
-    CURRENT,    //4 泄露电流检测
-    FORCE,      //5 张力检测
-    AIR,        //6 大气检测
-    MOVE,       //7 沉降检测
-    VIBRATION,  //8 振动检测
-    BRANCH
+    WIRE=0,       //1 电屏铠
+    BVALUE=1,     //2 B值检测
+    ANGLE=2,      //3 支柱斜率
+    CURRENT=3,    //4 泄露电流检测
+    FORCE=4,      //5 张力检测
+    AIR=5,        //6 大气检测
+    MOVE=6,       //7 沉降检测
+    VIBRATION=7,  //8 振动检测
+    BRANCH=8,
+    eNULL=9
 };
 struct originalPackage
 {
     long id;
     QByteArray values;
     QString tm;
+};
+struct simData
+{
+    QString deviceNo;       //模拟设备编号
+    QString deviceTable;
+    QString recentTm;       //最近一次更新数据的时间
+
+    QString dataNo;         //模拟的设备数据源的对应设备编号(默认就是模拟设备的编号)
+    QString dataStartTm;    //数据源的开始时间
+    QString dataEndTm;      //数据源的结束时间
+    long    dataCount;      //数据源的记录条数
+    QString dataTable;      //数据源对应的数据表格名称
+    eDeviceType eType;
+    int curIdx;
+    simData()
+    {
+        dataCount=0;
+        curIdx=0;
+        eType=eNULL;
+    }
+    QVector<B_Data>         simBValues;
+    QVector<branch_Data>    simBranchValues;
+    QVector<current_Data>   simCurrentValues;
+    QVector<angle_Data>     simAngleValues;
+    QVector<force_Data>     simForceValues;
+    QVector<air_Data>       simAirValues;
+    QVector<wire_Data>      simWireValues;
+};
+struct deviceInfos
+{
+    QStringList deviceNo;
+    QStringList tableName;
+    QStringList position;
+    QStringList sTypes;
+    QStringList departments;
+    QStringList recentTms;
+    QVector<eDeviceType> eTypes;
+    void clear(void)
+    {
+        deviceNo.clear();
+        tableName.clear();
+        position.clear();
+        sTypes.clear();
+    }
 };
 #define DB_PATHS  "./cc1.db"
 //添加设备

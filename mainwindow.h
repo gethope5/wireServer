@@ -35,27 +35,28 @@ public:
     ~MainWindow();
 protected:
     bool f;
-
 private slots:
-    void on_pushButton_startS_clicked();
+    void on_pbtnCollectStart_clicked();
     void AcceptConnection();
     void Disconnected();
     void ReadData();
     //    void on_pushButton_clicked();
-
-    void on_tbIP_clicked(const QModelIndex &index);
-
-    void on_pbtnAnalysis_clicked();
-    void slot_updateIndex(void );
+    void on_pbtnParseUpdate_clicked();
+    void slot_parseUpdate(void );
     void slot_filter(bool);    
     void on_pbtnSetDate_clicked();
     void slot_showMessage(QString);    
-    void on_lsDepartment_clicked(const QModelIndex &index);
+    void on_lsParseDepart_clicked(const QModelIndex &index);
     void updateDeiveType(QString local);
     void on_pbtnReflash_clicked();
-
     void on_pbtnUpdateTable_clicked();
 
+    void slot_simTimer(void);
+    void  slot_simPbtn(void);
+    void slot_simDoubleList(const QModelIndex &index);
+    void slot_udpateSimDevice(void);
+    void slot_SimSetType(void);
+    void slot_simSavePar(const QString );
 private:
     bool GetSocketByNo(qint16 deviceNo,QTcpSocket * &client,qint32 &cctNo);
     bool IsConnectedDevice(qint16 deviceNo);//判断设备是否已经连接
@@ -70,8 +71,19 @@ private:
     Ui::MainWindow *ui;
     MeasureDB *sysDb;
     QLabel *dbConnect;
-    QTimer *timer;
+    QTimer *parseTimer;
 
     QString curDate;
+    QTimer *simTimer;
+    static QVector<simData> simDeviceInfo;         //存储了所有模拟设备的信息
+    void addSimDevice(QString deviceInfo);
+    void simSavePar(void);
+    void upateSimData(void);
+    void simUiInitial(void);
+    simData updateSimPar(QString devcieId,QString dataId);
+    QStringList simHistoryTms;
+    void updateSimData(simData &tmpDatas,QString tm);
+    void updateSimHistory(void);
+    void updateSimTime(QString startTm,QString endTm,QString interval,QStringList & tmList);
 };
 #endif // MAINWINDOW_H
